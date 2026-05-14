@@ -15,5 +15,8 @@
     "express": "latest",
     "jsonwebtoken": "latest",
     "morgan": "latest"
+  },
+  "devDependencies": {
+    "@flydotio/dockerfile": "^0.7.10"
   }
 }
