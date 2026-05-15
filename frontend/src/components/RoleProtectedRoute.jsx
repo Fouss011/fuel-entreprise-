@@ -1,25 +1,19 @@
 import { Navigate } from 'react-router-dom'
+import { getCurrentUser } from '../utils/roles'
 
-import {
-  getCurrentUser
-} from '../utils/roles'
-
-export default function RoleProtectedRoute({
-  children,
-  allowedRoles = []
-}) {
+export default function RoleProtectedRoute({ children, allowedRoles = [] }) {
   const token = localStorage.getItem('fuel_token')
+  const user = getCurrentUser()
 
   if (!token) {
     return <Navigate to="/login" replace />
   }
 
-  const user = getCurrentUser()
+  if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+    if (user.role === 'pompiste') {
+      return <Navigate to="/pump" replace />
+    }
 
-  if (
-    allowedRoles.length > 0 &&
-    !allowedRoles.includes(user.role)
-  ) {
     return <Navigate to="/" replace />
   }
 

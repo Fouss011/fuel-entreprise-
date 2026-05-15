@@ -88,7 +88,7 @@ export default function DashboardPage() {
     })
 
     setRecentDeliveries(
-      deliveries.slice(0, 6)
+      deliveries.slice(0, 2)
     )
   }
 
