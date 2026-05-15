@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { loginUser } from '../api/api'
 
 export default function LoginPage() {
@@ -6,6 +7,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const navigate = useNavigate()
 
   async function handleLogin(e) {
     e.preventDefault()
@@ -25,9 +27,9 @@ export default function LoginPage() {
 localStorage.setItem('fuel_user', JSON.stringify(data.user))
 
 if (data.user?.role === 'pompiste') {
-  window.location.href = '/pump'
+  navigate('/pump', { replace: true })
 } else {
-  window.location.href = '/'
+  navigate('/', { replace: true })
 }
     } catch {
       setError('Erreur connexion')
