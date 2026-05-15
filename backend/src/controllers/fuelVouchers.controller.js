@@ -33,18 +33,19 @@ export async function getFuelVouchers(req, res) {
 export async function createFuelVoucher(req, res) {
   try {
     const vehicleId = req.body.vehicleId || req.body.vehicle_id
-const driverId = req.body.driverId || req.body.driver_id
-const divisionId = req.body.divisionId || req.body.division_id
-const fuelType = req.body.fuelType || req.body.fuel_type
-const requestedLiters =
-  req.body.requestedLiters ||
-  req.body.requested_liters ||
-  req.body.quantityLiters ||
-  req.body.quantity_liters
+    const driverId = req.body.driverId || req.body.driver_id
+    const divisionId = req.body.divisionId || req.body.division_id
+    const fuelType = req.body.fuelType || req.body.fuel_type
 
-const approvedLiters =
-  req.body.approvedLiters ||
-  req.body.approved_liters
+    const requestedLiters =
+      req.body.requestedLiters ||
+      req.body.requested_liters ||
+      req.body.quantityLiters ||
+      req.body.quantity_liters
+
+    const approvedLiters =
+      req.body.approvedLiters ||
+      req.body.approved_liters
 
     if (!vehicleId || !driverId || !requestedLiters) {
       return res.status(400).json({
@@ -94,7 +95,9 @@ const approvedLiters =
 export async function approveFuelVoucher(req, res) {
   try {
     const { id } = req.params
-    const { approvedLiters } = req.body
+    const approvedLiters =
+      req.body.approvedLiters ||
+      req.body.approved_liters
 
     const payload = {
       status: 'approved',
@@ -164,8 +167,7 @@ export async function useFuelVoucher(req, res) {
     let query = supabase
       .from('fuel_vouchers')
       .update({
-        status: 'used',
-        used_at: new Date().toISOString()
+        status: 'used'
       })
       .eq('id', id)
 
