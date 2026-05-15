@@ -150,29 +150,23 @@ export default function DashboardPage() {
         />
       </section>
 
-      <section
-        className="dashboard-grid"
-        style={{
-          gridTemplateColumns:
-            'repeat(2, minmax(240px, 1fr))'
-        }}
-      >
-        <StatCard
-          title="Litres servis"
-          value={`${stats.liters} L`}
-          subtitle="Volume total distribué"
-          icon={<Fuel size={20} />}
-          tone="green"
-        />
+      <section className="dashboard-grid dashboard-grid-wide">
+  <StatCard
+    title="Litres servis"
+    value={`${stats.liters} L`}
+    subtitle="Volume total distribué"
+    icon={<Fuel size={20} />}
+    tone="green"
+  />
 
-        <StatCard
-          title="Montant total"
-          value={`${stats.amount} FCFA`}
-          subtitle="Consommation globale"
-          icon={<Activity size={20} />}
-          tone="amber"
-        />
-      </section>
+  <StatCard
+    title="Montant total"
+    value={`${stats.amount} FCFA`}
+    subtitle="Consommation globale"
+    icon={<Activity size={20} />}
+    tone="amber"
+  />
+</section>
 
       <div className="panel-grid">
         <div className="panel">
