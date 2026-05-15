@@ -1,8 +1,9 @@
 import { supabase } from '../config/supabase.js'
+import { applyStructureScope } from '../utils/scope.js'
 
 export async function getAnalytics(req, res) {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('fuel_deliveries')
       .select(`
         *,
@@ -19,6 +20,10 @@ export async function getAnalytics(req, res) {
         )
       `)
 
+    query = applyStructureScope(query, req)
+
+    const { data, error } = await query
+
     if (error) {
       return res.status(400).json({
         error: error.message
@@ -26,22 +31,18 @@ export async function getAnalytics(req, res) {
     }
 
     const deliveries = data || []
-
     const vehicleStats = {}
-
     const anomalies = []
 
     for (const item of deliveries) {
-      const vehicle =
-        item.voucher?.vehicle
+      const vehicle = item.voucher?.vehicle
 
       if (!vehicle) continue
 
       if (!vehicleStats[vehicle.id]) {
         vehicleStats[vehicle.id] = {
           vehicleId: vehicle.id,
-          plateNumber:
-            vehicle.plate_number,
+          plateNumber: vehicle.plate_number,
           label: vehicle.label,
           totalLiters: 0,
           totalAmount: 0,
@@ -58,9 +59,7 @@ export async function getAnalytics(req, res) {
       vehicleStats[vehicle.id].totalDeliveries += 1
 
       const approved =
-        Number(
-          item.voucher?.approved_liters || 0
-        )
+        Number(item.voucher?.approved_liters || 0)
 
       const delivered =
         Number(item.delivered_liters || 0)
@@ -68,10 +67,8 @@ export async function getAnalytics(req, res) {
       if (delivered > approved) {
         anomalies.push({
           type: 'OVER_DELIVERY',
-          voucherNumber:
-            item.voucher?.voucher_number,
-          plateNumber:
-            vehicle.plate_number,
+          voucherNumber: item.voucher?.voucher_number,
+          plateNumber: vehicle.plate_number,
           approved,
           delivered
         })
@@ -80,21 +77,15 @@ export async function getAnalytics(req, res) {
       if (delivered <= 0) {
         anomalies.push({
           type: 'ZERO_DELIVERY',
-          voucherNumber:
-            item.voucher?.voucher_number,
-          plateNumber:
-            vehicle.plate_number
+          voucherNumber: item.voucher?.voucher_number,
+          plateNumber: vehicle.plate_number
         })
       }
     }
 
     const topVehicles =
       Object.values(vehicleStats)
-        .sort(
-          (a, b) =>
-            b.totalLiters -
-            a.totalLiters
-        )
+        .sort((a, b) => b.totalLiters - a.totalLiters)
         .slice(0, 10)
 
     return res.json({
@@ -102,14 +93,10 @@ export async function getAnalytics(req, res) {
       anomalies
     })
   } catch (error) {
-    console.error(
-      'ANALYTICS_ERROR =>',
-      error
-    )
+    console.error('ANALYTICS_ERROR =>', error)
 
     return res.status(500).json({
-      error:
-        'Erreur analytics carburant'
+      error: 'Erreur analytics carburant'
     })
   }
 }

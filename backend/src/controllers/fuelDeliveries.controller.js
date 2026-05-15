@@ -1,17 +1,23 @@
 import { supabase } from '../config/supabase.js'
+import { applyStructureScope, getUserStructureId } from '../utils/scope.js'
 
 export async function getApprovedVouchers(req, res) {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('fuel_vouchers')
       .select(`
         *,
         division:divisions(id, name),
         vehicle:vehicles(id, plate_number, label),
-        driver:users_profile!fuel_vouchers_driver_id_fkey(id, full_name)
+        driver:users_profile!fuel_vouchers_driver_id_fkey(id, full_name),
+        structure:structures(id, name, code)
       `)
       .eq('status', 'approved')
       .order('approved_at', { ascending: false })
+
+    query = applyStructureScope(query, req)
+
+    const { data, error } = await query
 
     if (error) {
       return res.status(400).json({ error: error.message })
@@ -38,7 +44,7 @@ export async function searchVoucherByCode(req, res) {
       })
     }
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('fuel_vouchers')
       .select(`
         *,
@@ -51,13 +57,18 @@ export async function searchVoucherByCode(req, res) {
         driver:users_profile!fuel_vouchers_driver_id_fkey(
           id,
           full_name
-        )
+        ),
+        structure:structures(id, name, code)
       `)
       .ilike('voucher_number', `%${code}%`)
       .order('created_at', {
         ascending: false
       })
       .limit(10)
+
+    query = applyStructureScope(query, req)
+
+    const { data, error } = await query
 
     if (error) {
       return res.status(400).json({
@@ -69,14 +80,10 @@ export async function searchVoucherByCode(req, res) {
       vouchers: data || []
     })
   } catch (error) {
-    console.error(
-      'SEARCH_VOUCHER_ERROR =>',
-      error
-    )
+    console.error('SEARCH_VOUCHER_ERROR =>', error)
 
     return res.status(500).json({
-      error:
-        'Erreur recherche bon'
+      error: 'Erreur recherche bon'
     })
   }
 }
@@ -97,40 +104,50 @@ export async function deliverFuel(req, res) {
       })
     }
 
-    const { data: voucher, error: voucherError } = await supabase
-  .from('fuel_vouchers')
-  .select(`
-    id,
-    approved_liters,
-    status
-  `)
-  .eq('id', voucherId)
-  .single()
+    const structureId = getUserStructureId(req)
 
-if (voucherError || !voucher) {
-  return res.status(404).json({
-    error: 'Bon introuvable'
-  })
-}
+    if (!structureId && req.user.role !== 'super_admin') {
+      return res.status(400).json({
+        error: 'Structure utilisateur manquante'
+      })
+    }
 
-if (voucher.status !== 'approved') {
-  return res.status(400).json({
-    error: 'Ce bon n’est plus disponible'
-  })
-}
+    let voucherQuery = supabase
+      .from('fuel_vouchers')
+      .select(`
+        id,
+        approved_liters,
+        status,
+        structure_id
+      `)
+      .eq('id', voucherId)
 
-if (
-  Number(deliveredLiters) >
-  Number(voucher.approved_liters)
-) {
-  return res.status(400).json({
-    error:
-      'La quantité servie ne peut pas dépasser la quantité approuvée'
-  })
-}
+    if (req.user.role !== 'super_admin') {
+      voucherQuery = voucherQuery.eq('structure_id', structureId)
+    }
 
-    const totalAmount =
-      Number(deliveredLiters) * Number(unitPrice || 0)
+    const { data: voucher, error: voucherError } = await voucherQuery.single()
+
+    if (voucherError || !voucher) {
+      return res.status(404).json({
+        error: 'Bon introuvable pour cette structure'
+      })
+    }
+
+    if (voucher.status !== 'approved') {
+      return res.status(400).json({
+        error: 'Ce bon n’est plus disponible'
+      })
+    }
+
+    if (Number(deliveredLiters) > Number(voucher.approved_liters)) {
+      return res.status(400).json({
+        error: 'La quantité servie ne peut pas dépasser la quantité approuvée'
+      })
+    }
+
+    const finalStructureId = voucher.structure_id || structureId
+    const totalAmount = Number(deliveredLiters) * Number(unitPrice || 0)
 
     const { data: delivery, error: deliveryError } = await supabase
       .from('fuel_deliveries')
@@ -141,7 +158,8 @@ if (
         unit_price: Number(unitPrice || 0),
         total_amount: totalAmount,
         station_name: stationName || null,
-        delivery_notes: deliveryNotes || null
+        delivery_notes: deliveryNotes || null,
+        structure_id: finalStructureId
       })
       .select('*')
       .single()
@@ -155,9 +173,11 @@ if (
     await supabase
       .from('fuel_vouchers')
       .update({
-        status: 'used'
+        status: 'used',
+        used_at: new Date().toISOString()
       })
       .eq('id', voucherId)
+      .eq('structure_id', finalStructureId)
 
     return res.status(201).json({
       delivery
@@ -167,6 +187,72 @@ if (
 
     return res.status(500).json({
       error: 'Erreur livraison carburant'
+    })
+  }
+}
+
+export async function getFuelDeliveries(req, res) {
+  try {
+    let query = supabase
+      .from('fuel_deliveries')
+      .select(`
+        *,
+        voucher:fuel_vouchers(
+          id,
+          voucher_number,
+          approved_liters,
+          status,
+          driver:users_profile!fuel_vouchers_driver_id_fkey(id, full_name),
+          vehicle:vehicles(id, plate_number, label),
+          division:divisions(id, name)
+        ),
+        structure:structures(id, name, code)
+      `)
+      .order('created_at', { ascending: false })
+
+    query = applyStructureScope(query, req)
+
+    const { data, error } = await query
+
+    if (error) {
+      return res.status(400).json({ error: error.message })
+    }
+
+    return res.json({
+      deliveries: data || []
+    })
+  } catch (error) {
+    console.error('GET_FUEL_DELIVERIES_ERROR =>', error)
+    return res.status(500).json({
+      error: 'Erreur chargement livraisons'
+    })
+  }
+}
+
+export async function deleteFuelDelivery(req, res) {
+  try {
+    const { id } = req.params
+
+    let query = supabase
+      .from('fuel_deliveries')
+      .delete()
+      .eq('id', id)
+
+    query = applyStructureScope(query, req)
+
+    const { error } = await query
+
+    if (error) {
+      return res.status(400).json({ error: error.message })
+    }
+
+    return res.json({
+      message: 'Livraison supprimée'
+    })
+  } catch (error) {
+    console.error('DELETE_FUEL_DELIVERY_ERROR =>', error)
+    return res.status(500).json({
+      error: 'Erreur suppression livraison'
     })
   }
 }

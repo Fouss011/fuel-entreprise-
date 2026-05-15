@@ -1,8 +1,9 @@
 import { supabase } from '../config/supabase.js'
+import { applyStructureScope } from '../utils/scope.js'
 
 export async function getDeliveriesReport(req, res) {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('fuel_deliveries')
       .select(`
         *,
@@ -19,6 +20,10 @@ export async function getDeliveriesReport(req, res) {
         )
       `)
       .order('delivered_at', { ascending: false })
+
+    query = applyStructureScope(query, req)
+
+    const { data, error } = await query
 
     if (error) {
       return res.status(400).json({

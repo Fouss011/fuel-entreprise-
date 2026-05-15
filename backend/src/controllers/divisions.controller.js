@@ -1,11 +1,26 @@
 import { supabase } from '../config/supabase.js'
+import {
+  applyStructureScope,
+  resolveStructureIdForCreate
+} from '../utils/scope.js'
 
 export async function getDivisions(req, res) {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('divisions')
-      .select('*')
+      .select(`
+        id,
+        name,
+        code,
+        structure_id,
+        created_at,
+        structure:structures(id, name, code)
+      `)
       .order('created_at', { ascending: false })
+
+    query = applyStructureScope(query, req)
+
+    const { data, error } = await query
 
     if (error) return res.status(400).json({ error: error.message })
 
@@ -18,20 +33,33 @@ export async function getDivisions(req, res) {
 
 export async function createDivision(req, res) {
   try {
-    const { name, code, managerName } = req.body
+    const { name, code } = req.body
 
     if (!name || !code) {
-      return res.status(400).json({ error: 'Nom et code requis' })
+      return res.status(400).json({ error: 'Nom et code division requis' })
+    }
+
+    const structureId = resolveStructureIdForCreate(req, req.body)
+
+    if (!structureId) {
+      return res.status(400).json({ error: 'Structure obligatoire' })
     }
 
     const { data, error } = await supabase
       .from('divisions')
       .insert({
-        name,
+        name: name.trim(),
         code: code.toUpperCase().trim(),
-        manager_name: managerName || null
+        structure_id: structureId
       })
-      .select('*')
+      .select(`
+        id,
+        name,
+        code,
+        structure_id,
+        created_at,
+        structure:structures(id, name, code)
+      `)
       .single()
 
     if (error) return res.status(400).json({ error: error.message })
@@ -47,10 +75,14 @@ export async function deleteDivision(req, res) {
   try {
     const { id } = req.params
 
-    const { error } = await supabase
+    let query = supabase
       .from('divisions')
       .delete()
       .eq('id', id)
+
+    query = applyStructureScope(query, req)
+
+    const { error } = await query
 
     if (error) return res.status(400).json({ error: error.message })
 

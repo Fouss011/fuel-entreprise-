@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase.js'
+import { applyStructureScope } from '../utils/scope.js'
 
 export async function getMonthlyClosing(req, res) {
   try {
@@ -13,7 +14,7 @@ export async function getMonthlyClosing(req, res) {
     end.setUTCMonth(end.getUTCMonth() + 1)
     const endDate = end.toISOString()
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('fuel_deliveries')
       .select(`
         *,
@@ -27,6 +28,10 @@ export async function getMonthlyClosing(req, res) {
       .gte('delivered_at', startDate)
       .lt('delivered_at', endDate)
       .order('delivered_at', { ascending: false })
+
+    query = applyStructureScope(query, req)
+
+    const { data, error } = await query
 
     if (error) {
       return res.status(400).json({ error: error.message })

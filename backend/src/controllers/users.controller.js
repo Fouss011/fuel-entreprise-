@@ -1,9 +1,14 @@
 import bcrypt from 'bcryptjs'
 import { supabase } from '../config/supabase.js'
+import {
+  applyStructureScope,
+  resolveStructureIdForCreate,
+  isSuperAdmin
+} from '../utils/scope.js'
 
 export async function getUsers(req, res) {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('users_profile')
       .select(`
         id,
@@ -12,11 +17,17 @@ export async function getUsers(req, res) {
         phone,
         role,
         division_id,
+        structure_id,
         is_active,
         created_at,
-        division:divisions(id, name, code)
+        division:divisions(id, name, code),
+        structure:structures(id, name, code)
       `)
       .order('created_at', { ascending: false })
+
+    query = applyStructureScope(query, req)
+
+    const { data, error } = await query
 
     if (error) return res.status(400).json({ error: error.message })
 
@@ -29,10 +40,36 @@ export async function getUsers(req, res) {
 
 export async function createUser(req, res) {
   try {
-    const { email, password, fullName, phone, role, divisionId } = req.body
+    const {
+      email,
+      password,
+      fullName,
+      phone,
+      role,
+      divisionId,
+      structureId
+    } = req.body
 
     if (!email || !password || !fullName || !role) {
-      return res.status(400).json({ error: 'Email, mot de passe, nom et rôle requis' })
+      return res.status(400).json({
+        error: 'Email, mot de passe, nom et rôle requis'
+      })
+    }
+
+    const finalStructureId = isSuperAdmin(req)
+      ? structureId || null
+      : resolveStructureIdForCreate(req, req.body)
+
+    if (!finalStructureId && role !== 'super_admin') {
+      return res.status(400).json({
+        error: 'Structure obligatoire pour cet utilisateur'
+      })
+    }
+
+    if (!isSuperAdmin(req) && role === 'super_admin') {
+      return res.status(403).json({
+        error: 'Seul le super admin peut créer un super admin'
+      })
     }
 
     const passwordHash = await bcrypt.hash(password, 10)
@@ -45,7 +82,8 @@ export async function createUser(req, res) {
         full_name: fullName,
         phone: phone || null,
         role,
-        division_id: divisionId || null
+        division_id: divisionId || null,
+        structure_id: finalStructureId
       })
       .select(`
         id,
@@ -54,8 +92,10 @@ export async function createUser(req, res) {
         phone,
         role,
         division_id,
+        structure_id,
         is_active,
-        created_at
+        created_at,
+        structure:structures(id, name, code)
       `)
       .single()
 
@@ -73,13 +113,19 @@ export async function deleteUser(req, res) {
     const { id } = req.params
 
     if (id === req.user.id) {
-      return res.status(400).json({ error: 'Impossible de supprimer votre propre compte' })
+      return res.status(400).json({
+        error: 'Impossible de supprimer votre propre compte'
+      })
     }
 
-    const { error } = await supabase
+    let query = supabase
       .from('users_profile')
       .delete()
       .eq('id', id)
+
+    query = applyStructureScope(query, req)
+
+    const { error } = await query
 
     if (error) return res.status(400).json({ error: error.message })
 

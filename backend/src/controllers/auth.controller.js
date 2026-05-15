@@ -9,7 +9,8 @@ function signToken(user) {
       email: user.email,
       role: user.role,
       fullName: user.full_name,
-      divisionId: user.division_id
+      divisionId: user.division_id,
+      structureId: user.structure_id
     },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
@@ -26,7 +27,10 @@ export async function login(req, res) {
 
     const { data: user, error } = await supabase
       .from('users_profile')
-      .select('*')
+      .select(`
+        *,
+        structure:structures(id, name, code)
+      `)
       .eq('email', email.toLowerCase().trim())
       .single()
 
@@ -54,7 +58,9 @@ export async function login(req, res) {
         fullName: user.full_name,
         phone: user.phone,
         role: user.role,
-        divisionId: user.division_id
+        divisionId: user.division_id,
+        structureId: user.structure_id,
+        structure: user.structure || null
       }
     })
   } catch (error) {
@@ -67,7 +73,17 @@ export async function me(req, res) {
   try {
     const { data: user, error } = await supabase
       .from('users_profile')
-      .select('id, email, full_name, phone, role, division_id, is_active')
+      .select(`
+        id,
+        email,
+        full_name,
+        phone,
+        role,
+        division_id,
+        structure_id,
+        is_active,
+        structure:structures(id, name, code)
+      `)
       .eq('id', req.user.id)
       .single()
 

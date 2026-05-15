@@ -1,15 +1,31 @@
 import { supabase } from '../config/supabase.js'
+import {
+  applyStructureScope,
+  resolveStructureIdForCreate
+} from '../utils/scope.js'
 
 export async function getVehicles(req, res) {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('vehicles')
       .select(`
-        *,
+        id,
+        plate_number,
+        brand,
+        model,
+        fuel_type,
+        division_id,
+        structure_id,
+        is_active,
+        created_at,
         division:divisions(id, name, code),
-        driver:users_profile(id, full_name, email)
+        structure:structures(id, name, code)
       `)
       .order('created_at', { ascending: false })
+
+    query = applyStructureScope(query, req)
+
+    const { data, error } = await query
 
     if (error) return res.status(400).json({ error: error.message })
 
@@ -24,28 +40,45 @@ export async function createVehicle(req, res) {
   try {
     const {
       plateNumber,
-      label,
-      vehicleType,
+      brand,
+      model,
       fuelType,
-      divisionId,
-      assignedDriverId
+      divisionId
     } = req.body
 
-    if (!plateNumber || !divisionId) {
-      return res.status(400).json({ error: 'Immatriculation et division requises' })
+    if (!plateNumber) {
+      return res.status(400).json({ error: 'Immatriculation requise' })
+    }
+
+    const structureId = resolveStructureIdForCreate(req, req.body)
+
+    if (!structureId) {
+      return res.status(400).json({ error: 'Structure obligatoire' })
     }
 
     const { data, error } = await supabase
       .from('vehicles')
       .insert({
         plate_number: plateNumber.toUpperCase().trim(),
-        label: label || null,
-        vehicle_type: vehicleType || null,
+        brand: brand || null,
+        model: model || null,
         fuel_type: fuelType || 'diesel',
-        division_id: divisionId,
-        assigned_driver_id: assignedDriverId || null
+        division_id: divisionId || null,
+        structure_id: structureId
       })
-      .select('*')
+      .select(`
+        id,
+        plate_number,
+        brand,
+        model,
+        fuel_type,
+        division_id,
+        structure_id,
+        is_active,
+        created_at,
+        division:divisions(id, name, code),
+        structure:structures(id, name, code)
+      `)
       .single()
 
     if (error) return res.status(400).json({ error: error.message })
@@ -61,10 +94,14 @@ export async function deleteVehicle(req, res) {
   try {
     const { id } = req.params
 
-    const { error } = await supabase
+    let query = supabase
       .from('vehicles')
       .delete()
       .eq('id', id)
+
+    query = applyStructureScope(query, req)
+
+    const { error } = await query
 
     if (error) return res.status(400).json({ error: error.message })
 

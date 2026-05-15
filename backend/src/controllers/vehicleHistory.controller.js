@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase.js'
+import { applyStructureScope } from '../utils/scope.js'
 
 export async function getVehicleHistory(req, res) {
   try {
@@ -25,6 +26,8 @@ export async function getVehicleHistory(req, res) {
       `)
       .eq('voucher.vehicle_id', vehicleId)
       .order('delivered_at', { ascending: false })
+
+    query = applyStructureScope(query, req)
 
     if (month) {
       const startDate = `${month}-01T00:00:00.000Z`
