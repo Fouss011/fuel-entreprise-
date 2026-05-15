@@ -6,15 +6,19 @@ import {
   FileText,
   Fuel,
   LogOut,
+  Menu,
   ShieldCheck,
   Truck,
-  Users
+  Users,
+  X
 } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
+import { useState } from 'react'
 import { hasRole } from '../utils/roles'
 
 export default function Sidebar() {
   const user = JSON.parse(localStorage.getItem('fuel_user') || '{}')
+  const [open, setOpen] = useState(false)
 
   function logout() {
     localStorage.removeItem('fuel_token')
@@ -23,150 +27,156 @@ export default function Sidebar() {
   }
 
   return (
-    <aside
-      style={{
-        width: 282,
-        minHeight: '100vh',
-        padding: 20,
-        background: '#07172f',
-        color: '#ffffff',
-        borderRight: '1px solid rgba(255,255,255,0.08)',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        position: 'sticky',
-        top: 0
-      }}
-    >
-      <div>
-        <div style={{ marginBottom: 28 }}>
-          <div
+    <>
+      <div className="mobile-nav">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <img
+            src="/favicon.png"
+            alt="Fuel Enterprise"
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              marginBottom: 20
+              width: 38,
+              height: 38,
+              borderRadius: 10,
+              objectFit: 'contain',
+              background: '#ffffff'
             }}
-          >
-            <img
-  src="/logo.png"
-  alt="Fuel Manager"
-  style={{
-    width: 52,
-    height: 52,
-    borderRadius: 12,
-    objectFit: 'cover',
-    background: '#ffffff',
-    padding: 4
-  }}
-/>
+          />
 
-            <div>
-              <h2 style={{ fontSize: 19, letterSpacing: '-0.03em' }}>
-                Fuel Enterprise
-              </h2>
-              <p style={{ color: '#93a4bd', fontSize: 12 }}>
-                Contrôle carburant
+          <div>
+            <strong>Fuel Enterprise</strong>
+            <p style={{ color: '#94a3b8', fontSize: 12 }}>Contrôle carburant</p>
+          </div>
+        </div>
+
+        <button className="mobile-menu-btn" onClick={() => setOpen(true)}>
+          <Menu size={24} />
+        </button>
+      </div>
+
+      {open && <div className="sidebar-overlay" onClick={() => setOpen(false)} />}
+
+      <aside className={`sidebar ${open ? 'sidebar-mobile-open' : ''}`}>
+        <div>
+          <div style={{ marginBottom: 28 }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 12,
+                marginBottom: 20
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <img
+                  src="/favicon.png"
+                  alt="Fuel Enterprise"
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 12,
+                    objectFit: 'contain',
+                    background: '#ffffff'
+                  }}
+                />
+
+                <div>
+                  <h2 style={{ fontSize: 19, letterSpacing: '-0.03em' }}>
+                    Fuel Enterprise
+                  </h2>
+                  <p style={{ color: '#93a4bd', fontSize: 12 }}>
+                    Contrôle carburant
+                  </p>
+                </div>
+              </div>
+
+              <button className="mobile-close-btn" onClick={() => setOpen(false)}>
+                <X size={22} />
+              </button>
+            </div>
+
+            <div
+              style={{
+                padding: 14,
+                borderRadius: 14,
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.08)'
+              }}
+            >
+              <p style={{ color: '#93a4bd', fontSize: 12, marginBottom: 5 }}>
+                Session active
+              </p>
+
+              <strong style={{ fontSize: 14 }}>
+                {user.fullName || 'Utilisateur'}
+              </strong>
+
+              <p style={{ color: '#bfdbfe', fontSize: 12, marginTop: 5 }}>
+                {formatRole(user.role)}
               </p>
             </div>
           </div>
 
-          <div
-            style={{
-              padding: 14,
-              borderRadius: 14,
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.08)'
-            }}
-          >
-            <p style={{ color: '#93a4bd', fontSize: 12, marginBottom: 5 }}>
-              Session active
-            </p>
+          <nav style={{ display: 'grid', gap: 6 }}>
+            {hasRole('super_admin', 'direction', 'chef_division') && (
+              <SidebarItem close={() => setOpen(false)} to="/" icon={<BarChart3 size={18} />} label="Vue générale" />
+            )}
 
-            <strong style={{ fontSize: 14 }}>
-              {user.fullName || 'Utilisateur'}
-            </strong>
+            {hasRole('super_admin', 'direction') && (
+              <SidebarItem close={() => setOpen(false)} to="/divisions" icon={<Building2 size={18} />} label="Divisions" />
+            )}
 
-            <p style={{ color: '#bfdbfe', fontSize: 12, marginTop: 5 }}>
-              {formatRole(user.role)}
-            </p>
-          </div>
+            {hasRole('super_admin', 'direction', 'chef_division') && (
+              <SidebarItem close={() => setOpen(false)} to="/vehicles" icon={<Truck size={18} />} label="Véhicules" />
+            )}
+
+            {hasRole('super_admin', 'direction', 'chef_division') && (
+              <SidebarItem close={() => setOpen(false)} to="/vehicle-history" icon={<Truck size={18} />} label="Historique véhicule" />
+            )}
+
+            {hasRole('super_admin', 'direction', 'chef_division') && (
+              <SidebarItem close={() => setOpen(false)} to="/users" icon={<Users size={18} />} label="Utilisateurs" />
+            )}
+
+            {hasRole('super_admin', 'direction', 'chef_division') && (
+              <SidebarItem close={() => setOpen(false)} to="/vouchers" icon={<FileText size={18} />} label="Bons carburant" />
+            )}
+
+            {hasRole('super_admin', 'direction', 'pompiste') && (
+              <SidebarItem close={() => setOpen(false)} to="/pump" icon={<Fuel size={18} />} label="Pompiste" />
+            )}
+
+            {hasRole('super_admin', 'direction') && (
+              <SidebarItem close={() => setOpen(false)} to="/reports" icon={<ShieldCheck size={18} />} label="Rapports" />
+            )}
+
+            {hasRole('super_admin', 'direction') && (
+              <SidebarItem close={() => setOpen(false)} to="/analytics" icon={<Activity size={18} />} label="Analytics" />
+            )}
+
+            {hasRole('super_admin', 'direction') && (
+              <SidebarItem close={() => setOpen(false)} to="/monthly-closing" icon={<CalendarCheck size={18} />} label="Clôture mensuelle" />
+            )}
+          </nav>
         </div>
 
-        <nav style={{ display: 'grid', gap: 6 }}>
-          {hasRole('super_admin', 'direction', 'chef_division') && (
-            <SidebarItem to="/" icon={<BarChart3 size={18} />} label="Vue générale" />
-          )}
-
-          {hasRole('super_admin', 'direction') && (
-            <SidebarItem to="/divisions" icon={<Building2 size={18} />} label="Divisions" />
-          )}
-
-          {hasRole('super_admin', 'direction', 'chef_division') && (
-            <SidebarItem to="/vehicles" icon={<Truck size={18} />} label="Véhicules" />
-          )}
-
-          {hasRole('super_admin', 'direction', 'chef_division') && (
-            <SidebarItem to="/vehicle-history" icon={<Truck size={18} />} label="Historique véhicule" />
-          )}
-
-          {hasRole('super_admin', 'direction', 'chef_division') && (
-            <SidebarItem to="/users" icon={<Users size={18} />} label="Utilisateurs" />
-          )}
-
-          {hasRole('super_admin', 'direction', 'chef_division') && (
-            <SidebarItem to="/vouchers" icon={<FileText size={18} />} label="Bons carburant" />
-          )}
-
-          {hasRole('super_admin', 'direction', 'pompiste') && (
-            <SidebarItem to="/pump" icon={<Fuel size={18} />} label="Pompiste" />
-          )}
-
-          {hasRole('super_admin', 'direction') && (
-            <SidebarItem to="/reports" icon={<ShieldCheck size={18} />} label="Rapports" />
-          )}
-
-          {hasRole('super_admin', 'direction') && (
-            <SidebarItem to="/analytics" icon={<Activity size={18} />} label="Analytics" />
-          )}
-
-          {hasRole('super_admin', 'direction') && (
-            <SidebarItem to="/monthly-closing" icon={<CalendarCheck size={18} />} label="Clôture mensuelle" />
-          )}
-        </nav>
-      </div>
-
-      <button
-        onClick={logout}
-        style={{
-          width: '100%',
-          minHeight: 42,
-          border: '1px solid rgba(255,255,255,0.12)',
-          background: 'rgba(255,255,255,0.06)',
-          color: '#ffffff',
-          borderRadius: 12,
-          padding: 12,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 9,
-          fontWeight: 800
-        }}
-      >
-        <LogOut size={17} />
-        Déconnexion
-      </button>
-    </aside>
+        <button onClick={logout} className="sidebar-logout">
+          <LogOut size={17} />
+          Déconnexion
+        </button>
+      </aside>
+    </>
   )
 }
 
-function SidebarItem({ icon, label, to }) {
+function SidebarItem({ icon, label, to, close }) {
   const location = useLocation()
   const active = location.pathname === to
 
   return (
     <Link
       to={to}
+      onClick={close}
       style={{
         minHeight: 42,
         display: 'flex',
@@ -201,4 +211,3 @@ function formatRole(role) {
 
   return labels[role] || role || 'Utilisateur'
 }
-

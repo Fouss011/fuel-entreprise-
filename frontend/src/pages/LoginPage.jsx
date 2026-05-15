@@ -1,85 +1,87 @@
 import { useState } from 'react'
-import { Fuel, ShieldCheck } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Fuel, ShieldCheck, FileText } from 'lucide-react'
+
 import { loginUser } from '../api/api'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('admin@snpt.tg')
-  const [password, setPassword] = useState('admin123')
+  const navigate = useNavigate()
+
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   async function handleLogin(e) {
     e.preventDefault()
 
-    try {
-      setLoading(true)
-      setError('')
+    setLoading(true)
+    setError('')
 
-      const data = await loginUser({ email, password })
+    const data = await loginUser({ email, password })
 
-      if (data.error) {
-        setError(data.error)
-        return
-      }
-
-      localStorage.setItem('fuel_token', data.token)
-      localStorage.setItem('fuel_user', JSON.stringify(data.user))
-
-      window.location.href = '/'
-    } catch {
-      setError('Erreur connexion')
-    } finally {
+    if (data.error) {
+      setError(data.error)
       setLoading(false)
+      return
     }
+
+    localStorage.setItem('fuel_token', data.token)
+    localStorage.setItem('fuel_user', JSON.stringify(data.user))
+
+    navigate('/')
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'grid',
-        gridTemplateColumns: '1.1fr 0.9fr',
-        background: '#f3f6fb'
-      }}
-    >
-      <section
-        style={{
-          padding: 54,
-          background: '#07172f',
-          color: '#ffffff',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between'
-        }}
-      >
+    <div className="login-page">
+      <section className="login-hero">
         <div>
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 14,
-              marginBottom: 80
+              gap: 18,
+              marginBottom: 70
             }}
           >
             <div
               style={{
-                width: 48,
-                height: 48,
-                borderRadius: 14,
+                width: 82,
+                height: 82,
+                borderRadius: 24,
                 background: '#ffffff',
-                color: '#07172f',
                 display: 'grid',
                 placeItems: 'center'
               }}
             >
-              <Fuel size={26} />
+              <img
+                src="/favicon.png"
+                alt="Fuel Enterprise"
+                style={{
+                  width: 56,
+                  height: 56,
+                  objectFit: 'contain'
+                }}
+              />
             </div>
 
             <div>
-              <h1 style={{ fontSize: 24, letterSpacing: '-0.04em' }}>
+              <h1
+                style={{
+                  fontSize: 28,
+                  color: '#ffffff',
+                  marginBottom: 6
+                }}
+              >
                 Fuel Enterprise
               </h1>
-              <p style={{ color: '#93a4bd', marginTop: 4 }}>
+
+              <p
+                style={{
+                  color: '#94a3b8',
+                  fontSize: 16
+                }}
+              >
                 Plateforme de contrôle carburant
               </p>
             </div>
@@ -90,21 +92,21 @@ export default function LoginPage() {
               color: '#bfdbfe',
               fontWeight: 800,
               letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              fontSize: 12,
-              marginBottom: 18
+              marginBottom: 20,
+              textTransform: 'uppercase'
             }}
           >
-            Gestion industrielle · Traçabilité · Reporting
+            Gestion industrielle • Traçabilité • Reporting
           </p>
 
           <h2
             style={{
-              fontSize: 46,
-              lineHeight: 1.06,
-              letterSpacing: '-0.06em',
-              maxWidth: 660,
-              marginBottom: 22
+              fontSize: 72,
+              lineHeight: 1.02,
+              color: '#ffffff',
+              maxWidth: 720,
+              marginBottom: 24,
+              letterSpacing: '-0.05em'
             }}
           >
             Pilotez les bons carburant avec contrôle, preuves et visibilité.
@@ -113,13 +115,14 @@ export default function LoginPage() {
           <p
             style={{
               color: '#cbd5e1',
-              fontSize: 17,
-              lineHeight: 1.7,
-              maxWidth: 640
+              maxWidth: 650,
+              fontSize: 18,
+              lineHeight: 1.8
             }}
           >
             Une solution conçue pour les grandes structures : divisions,
-            véhicules, chauffeurs, pompistes, clôture mensuelle et audit des opérations.
+            véhicules, chauffeurs, pompistes, clôture mensuelle et audit des
+            opérations.
           </p>
         </div>
 
@@ -127,66 +130,36 @@ export default function LoginPage() {
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 14
+            gap: 16
           }}
         >
-          {['Bons numériques', 'Contrôle pompiste', 'Rapports PDF'].map((item) => (
-            <div
-              key={item}
-              style={{
-                padding: 16,
-                borderRadius: 14,
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.08)'
-              }}
-            >
-              <ShieldCheck size={18} />
-              <p style={{ marginTop: 10, fontWeight: 800 }}>
-                {item}
-              </p>
-            </div>
-          ))}
+          <FeatureCard
+            icon={<ShieldCheck size={24} />}
+            title="Bons numériques"
+          />
+
+          <FeatureCard
+            icon={<Fuel size={24} />}
+            title="Contrôle pompiste"
+          />
+
+          <FeatureCard
+            icon={<FileText size={24} />}
+            title="Rapports PDF"
+          />
         </div>
       </section>
 
-      <section
-        style={{
-          display: 'grid',
-          placeItems: 'center',
-          padding: 34
-        }}
-      >
-        <form
-          onSubmit={handleLogin}
-          style={{
-            width: '100%',
-            maxWidth: 430,
-            background: '#ffffff',
-            border: '1px solid #dbe3ee',
-            borderRadius: 20,
-            padding: 30,
-            boxShadow: '0 16px 40px rgba(15,23,42,0.08)'
-          }}
-        >
-          <p
-            style={{
-              color: '#1d4ed8',
-              fontSize: 12,
-              fontWeight: 900,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              marginBottom: 10
-            }}
-          >
-            Accès sécurisé
-          </p>
+      <section className="login-form-section">
+        <form onSubmit={handleLogin} className="login-card">
+          <p className="page-eyebrow">Accès sécurisé</p>
 
           <h2
             style={{
+              fontSize: 52,
               color: '#07172f',
-              fontSize: 28,
-              letterSpacing: '-0.04em',
-              marginBottom: 8
+              marginBottom: 14,
+              letterSpacing: '-0.05em'
             }}
           >
             Connexion
@@ -195,64 +168,97 @@ export default function LoginPage() {
           <p
             style={{
               color: '#64748b',
-              lineHeight: 1.5,
-              marginBottom: 24
+              marginBottom: 30,
+              lineHeight: 1.7,
+              fontSize: 16
             }}
           >
             Connecte-toi pour accéder au tableau de bord carburant.
           </p>
 
-          <label style={labelStyle}>Email</label>
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            className="form-input"
-            style={{ marginBottom: 16 }}
-          />
-
-          <label style={labelStyle}>Mot de passe</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Mot de passe"
-            className="form-input"
-            style={{ marginBottom: 18 }}
-          />
-
-          {error && (
-            <p
-              style={{
-                color: '#b91c1c',
-                background: '#fee2e2',
-                padding: 12,
-                borderRadius: 10,
-                marginBottom: 16,
-                fontWeight: 700
-              }}
-            >
-              {error}
-            </p>
-          )}
-
-          <button
-            disabled={loading}
-            className="btn-primary"
+          <div
             style={{
-              width: '100%',
-              minHeight: 46
+              display: 'grid',
+              gap: 18
             }}
           >
-            {loading ? 'Connexion...' : 'Se connecter'}
-          </button>
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  marginBottom: 8,
+                  fontWeight: 700,
+                  color: '#0f172a'
+                }}
+              >
+                Email
+              </label>
+
+              <input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                type="email"
+                className="form-input"
+                placeholder="admin@snpt.tg"
+              />
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  marginBottom: 8,
+                  fontWeight: 700,
+                  color: '#0f172a'
+                }}
+              >
+                Mot de passe
+              </label>
+
+              <input
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                type="password"
+                className="form-input"
+                placeholder="••••••••"
+              />
+            </div>
+
+            {error && (
+              <div
+                style={{
+                  padding: 12,
+                  borderRadius: 10,
+                  background: '#fee2e2',
+                  color: '#b91c1c',
+                  fontWeight: 700,
+                  fontSize: 14
+                }}
+              >
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={loading}
+              style={{
+                width: '100%',
+                minHeight: 52,
+                fontSize: 18
+              }}
+            >
+              {loading ? 'Connexion...' : 'Se connecter'}
+            </button>
+          </div>
 
           <p
             style={{
+              marginTop: 26,
+              textAlign: 'center',
               color: '#94a3b8',
-              fontSize: 12,
-              marginTop: 18,
-              textAlign: 'center'
+              fontSize: 14
             }}
           >
             Accès réservé aux utilisateurs autorisés.
@@ -263,10 +269,40 @@ export default function LoginPage() {
   )
 }
 
-const labelStyle = {
-  display: 'block',
-  color: '#07172f',
-  fontSize: 13,
-  fontWeight: 800,
-  marginBottom: 7
+function FeatureCard({ icon, title }) {
+  return (
+    <div
+      style={{
+        padding: 22,
+        borderRadius: 20,
+        background: 'rgba(255,255,255,0.06)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        backdropFilter: 'blur(10px)'
+      }}
+    >
+      <div
+        style={{
+          width: 42,
+          height: 42,
+          borderRadius: 12,
+          background: 'rgba(255,255,255,0.08)',
+          display: 'grid',
+          placeItems: 'center',
+          marginBottom: 18
+        }}
+      >
+        {icon}
+      </div>
+
+      <h3
+        style={{
+          color: '#ffffff',
+          fontSize: 18,
+          lineHeight: 1.4
+        }}
+      >
+        {title}
+      </h3>
+    </div>
+  )
 }
