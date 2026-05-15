@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Fuel, ShieldCheck } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Fuel } from 'lucide-react'
 import { loginUser } from '../api/api'
 
 export default function LoginPage() {
@@ -7,6 +7,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState('admin123')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [mobile, setMobile] = useState(window.innerWidth <= 900)
+
+  useEffect(() => {
+    function handleResize() {
+      setMobile(window.innerWidth <= 900)
+    }
+
+    window.addEventListener('resize', handleResize)
+
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   async function handleLogin(e) {
     e.preventDefault()
@@ -38,122 +49,85 @@ export default function LoginPage() {
       style={{
         minHeight: '100vh',
         display: 'grid',
-        gridTemplateColumns: '1.1fr 0.9fr',
+        gridTemplateColumns: mobile ? '1fr' : '1.1fr 0.9fr',
         background: '#f3f6fb'
       }}
     >
-      <section
-        style={{
-          padding: 54,
-          background: '#07172f',
-          color: '#ffffff',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between'
-        }}
-      >
-        <div>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 14,
-              marginBottom: 80
-            }}
-          >
-            <div
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 14,
-                background: '#ffffff',
-                color: '#07172f',
-                display: 'grid',
-                placeItems: 'center'
-              }}
-            >
-              <Fuel size={26} />
-            </div>
-
-            <div>
-              <h1 style={{ fontSize: 24, letterSpacing: '-0.04em' }}>
-                Fuel Enterprise
-              </h1>
-              <p style={{ color: '#93a4bd', marginTop: 4 }}>
-                Plateforme de contrôle carburant
-              </p>
-            </div>
-          </div>
-
-          <p
-            style={{
-              color: '#bfdbfe',
-              fontWeight: 800,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              fontSize: 12,
-              marginBottom: 18
-            }}
-          >
-            Gestion industrielle · Traçabilité · Reporting
-          </p>
-
-          <h2
-            style={{
-              fontSize: 46,
-              lineHeight: 1.06,
-              letterSpacing: '-0.06em',
-              maxWidth: 660,
-              marginBottom: 22
-            }}
-          >
-            Pilotez les bons carburant avec contrôle, preuves et visibilité.
-          </h2>
-
-          <p
-            style={{
-              color: '#cbd5e1',
-              fontSize: 17,
-              lineHeight: 1.7,
-              maxWidth: 640
-            }}
-          >
-            Une solution conçue pour les grandes structures : divisions,
-            véhicules, chauffeurs, pompistes, clôture mensuelle et audit des opérations.
-          </p>
-        </div>
-
-        <div
+      {!mobile && (
+        <section
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 14
+            padding: 54,
+            background: '#07172f',
+            color: '#ffffff',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between'
           }}
         >
-          {['Bons numériques', 'Contrôle pompiste', 'Rapports PDF'].map((item) => (
+          <div>
             <div
-              key={item}
               style={{
-                padding: 16,
-                borderRadius: 14,
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.08)'
+                display: 'flex',
+                alignItems: 'center',
+                gap: 14,
+                marginBottom: 80
               }}
             >
-              <ShieldCheck size={18} />
-              <p style={{ marginTop: 10, fontWeight: 800 }}>
-                {item}
-              </p>
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 14,
+                  background: '#ffffff',
+                  color: '#07172f',
+                  display: 'grid',
+                  placeItems: 'center'
+                }}
+              >
+                <Fuel size={26} />
+              </div>
+
+              <div>
+                <h1 style={{ fontSize: 24 }}>
+                  Fuel Enterprise
+                </h1>
+
+                <p style={{ color: '#93a4bd', marginTop: 4 }}>
+                  Plateforme de contrôle carburant
+                </p>
+              </div>
             </div>
-          ))}
-        </div>
-      </section>
+
+            <h2
+              style={{
+                fontSize: 46,
+                lineHeight: 1.06,
+                maxWidth: 660,
+                marginBottom: 22
+              }}
+            >
+              Pilotez les bons carburant avec contrôle et visibilité.
+            </h2>
+
+            <p
+              style={{
+                color: '#cbd5e1',
+                fontSize: 17,
+                lineHeight: 1.7,
+                maxWidth: 640
+              }}
+            >
+              Une solution conçue pour les grandes structures.
+            </p>
+          </div>
+        </section>
+      )}
 
       <section
         style={{
           display: 'grid',
           placeItems: 'center',
-          padding: 34
+          padding: mobile ? 18 : 34
         }}
       >
         <form
@@ -163,46 +137,44 @@ export default function LoginPage() {
             maxWidth: 430,
             background: '#ffffff',
             border: '1px solid #dbe3ee',
-            borderRadius: 20,
-            padding: 30,
+            borderRadius: mobile ? 16 : 20,
+            padding: mobile ? 22 : 30,
             boxShadow: '0 16px 40px rgba(15,23,42,0.08)'
           }}
         >
-          <p
-            style={{
-              color: '#1d4ed8',
-              fontSize: 12,
-              fontWeight: 900,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              marginBottom: 10
-            }}
-          >
-            Accès sécurisé
-          </p>
+          <div style={{ textAlign: 'center', marginBottom: 20 }}>
+            <div
+              style={{
+                width: 70,
+                height: 70,
+                borderRadius: 18,
+                background: '#07172f',
+                color: '#ffffff',
+                display: 'grid',
+                placeItems: 'center',
+                margin: '0 auto 16px'
+              }}
+            >
+              <Fuel size={34} />
+            </div>
 
-          <h2
-            style={{
-              color: '#07172f',
-              fontSize: 28,
-              letterSpacing: '-0.04em',
-              marginBottom: 8
-            }}
-          >
-            Connexion
-          </h2>
+            <h2
+              style={{
+                color: '#07172f',
+                fontSize: mobile ? 26 : 30,
+                marginBottom: 8
+              }}
+            >
+              Fuel Enterprise
+            </h2>
 
-          <p
-            style={{
-              color: '#64748b',
-              lineHeight: 1.5,
-              marginBottom: 24
-            }}
-          >
-            Connecte-toi pour accéder au tableau de bord carburant.
-          </p>
+            <p style={{ color: '#64748b' }}>
+              Connexion à la plateforme SNPT
+            </p>
+          </div>
 
           <label style={labelStyle}>Email</label>
+
           <input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -212,6 +184,7 @@ export default function LoginPage() {
           />
 
           <label style={labelStyle}>Mot de passe</label>
+
           <input
             type="password"
             value={password}
@@ -241,22 +214,11 @@ export default function LoginPage() {
             className="btn-primary"
             style={{
               width: '100%',
-              minHeight: 46
+              minHeight: 48
             }}
           >
             {loading ? 'Connexion...' : 'Se connecter'}
           </button>
-
-          <p
-            style={{
-              color: '#94a3b8',
-              fontSize: 12,
-              marginTop: 18,
-              textAlign: 'center'
-            }}
-          >
-            Accès réservé aux utilisateurs autorisés.
-          </p>
         </form>
       </section>
     </div>

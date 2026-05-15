@@ -249,46 +249,6 @@ a {
   }
 }
 
-@media (max-width: 760px) {
-  .app-shell {
-    display: block;
-  }
-
-  aside {
-    width: 100% !important;
-    min-height: auto !important;
-    position: relative !important;
-    padding: 14px !important;
-  }
-
-  aside nav {
-    display: flex !important;
-    overflow-x: auto;
-    gap: 8px !important;
-    padding-bottom: 6px;
-  }
-
-  aside nav a {
-    min-width: max-content;
-  }
-
-  .main-content {
-    padding: 16px !important;
-  }
-
-  .panel-grid,
-  .dashboard-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  .page-header {
-    flex-direction: column;
-  }
-
-  .page-title {
-    font-size: 26px;
-  }
-}
 
 .sidebar {
   width: 282px;
@@ -383,19 +343,34 @@ a {
   }
 
   .main-content {
-    padding: 18px !important;
+    padding: 16px;
   }
 
-  .panel-grid,
   .dashboard-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .panel-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .panel {
+    padding: 18px;
+    border-radius: 14px;
   }
 
   .page-header {
     flex-direction: column;
+    gap: 14px;
   }
 
   .page-title {
-    font-size: 28px;
+    font-size: 24px;
+    line-height: 1.2;
+  }
+
+  .page-subtitle {
+    font-size: 14px;
   }
 }
