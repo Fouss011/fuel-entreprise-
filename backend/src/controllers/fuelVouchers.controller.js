@@ -46,8 +46,6 @@ const approvedLiters =
   req.body.approvedLiters ||
   req.body.approved_liters
 
-const reason = req.body.reason || req.body.mission || req.body.notes
-
     if (!vehicleId || !driverId || !requestedLiters) {
       return res.status(400).json({
         error: 'Véhicule, chauffeur et quantité requis'
@@ -72,7 +70,6 @@ const reason = req.body.reason || req.body.mission || req.body.notes
         fuel_type: fuelType || 'diesel',
         requested_liters: Number(requestedLiters),
         approved_liters: approvedLiters ? Number(approvedLiters) : null,
-        reason: reason || mission || notes || null,
         status: 'pending',
         structure_id: structureId
       })
