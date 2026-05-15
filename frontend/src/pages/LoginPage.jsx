@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react'
-import { Fuel } from 'lucide-react'
+import { useState } from 'react'
 import { loginUser } from '../api/api'
 
 export default function LoginPage() {
@@ -7,17 +6,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [mobile, setMobile] = useState(window.innerWidth <= 900)
-
-  useEffect(() => {
-    function handleResize() {
-      setMobile(window.innerWidth <= 900)
-    }
-
-    window.addEventListener('resize', handleResize)
-
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
 
   async function handleLogin(e) {
     e.preventDefault()
@@ -44,6 +32,8 @@ export default function LoginPage() {
     }
   }
 
+  const mobile = window.innerWidth <= 900
+
   return (
     <div
       style={{
@@ -61,7 +51,7 @@ export default function LoginPage() {
             color: '#ffffff',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'space-between'
+            justifyContent: 'center'
           }}
         >
           <div>
@@ -73,25 +63,23 @@ export default function LoginPage() {
                 marginBottom: 80
               }}
             >
-              <div
+              <img
+                src="/favicon.png"
+                alt="Fuel Manager"
                 style={{
-                  width: 48,
-                  height: 48,
+                  width: 52,
+                  height: 52,
                   borderRadius: 14,
+                  objectFit: 'contain',
                   background: '#ffffff',
-                  color: '#07172f',
-                  display: 'grid',
-                  placeItems: 'center'
+                  padding: 6
                 }}
-              >
-                <Fuel size={26} />
-              </div>
+              />
 
               <div>
-                <h1 style={{ fontSize: 24 }}>
-                  Fuel Enterprise
+                <h1 style={{ fontSize: 26, letterSpacing: '-0.04em' }}>
+                  Fuel Manager
                 </h1>
-
                 <p style={{ color: '#93a4bd', marginTop: 4 }}>
                   Plateforme de contrôle carburant
                 </p>
@@ -101,7 +89,8 @@ export default function LoginPage() {
             <h2
               style={{
                 fontSize: 46,
-                lineHeight: 1.06,
+                lineHeight: 1.08,
+                letterSpacing: '-0.05em',
                 maxWidth: 660,
                 marginBottom: 22
               }}
@@ -143,20 +132,20 @@ export default function LoginPage() {
           }}
         >
           <div style={{ textAlign: 'center', marginBottom: 20 }}>
-            <div
+            <img
+              src="/favicon.png"
+              alt="Fuel Manager"
               style={{
-                width: 70,
-                height: 70,
-                borderRadius: 18,
-                background: '#07172f',
-                color: '#ffffff',
-                display: 'grid',
-                placeItems: 'center',
-                margin: '0 auto 16px'
+                width: 78,
+                height: 78,
+                borderRadius: 20,
+                objectFit: 'contain',
+                background: '#ffffff',
+                padding: 8,
+                marginBottom: 14,
+                boxShadow: '0 10px 24px rgba(15,23,42,0.12)'
               }}
-            >
-              <Fuel size={34} />
-            </div>
+            />
 
             <h2
               style={{
@@ -165,7 +154,7 @@ export default function LoginPage() {
                 marginBottom: 8
               }}
             >
-              Fuel Enterprise
+              Fuel Manager
             </h2>
 
             <p style={{ color: '#64748b' }}>
@@ -174,7 +163,6 @@ export default function LoginPage() {
           </div>
 
           <label style={labelStyle}>Email</label>
-
           <input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -184,7 +172,6 @@ export default function LoginPage() {
           />
 
           <label style={labelStyle}>Mot de passe</label>
-
           <input
             type="password"
             value={password}

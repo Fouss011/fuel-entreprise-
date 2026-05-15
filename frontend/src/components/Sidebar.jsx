@@ -32,7 +32,7 @@ export default function Sidebar() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <img
             src="/favicon.png"
-            alt="Fuel Enterprise"
+            alt="Fuel Manager"
             style={{
               width: 38,
               height: 38,
@@ -43,7 +43,7 @@ export default function Sidebar() {
           />
 
           <div>
-            <strong>Fuel Enterprise</strong>
+            <strong>Fuel manager</strong>
             <p style={{ color: '#94a3b8', fontSize: 12 }}>Contrôle carburant</p>
           </div>
         </div>
@@ -70,7 +70,7 @@ export default function Sidebar() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <img
                   src="/favicon.png"
-                  alt="Fuel Enterprise"
+                  alt="Fuel Manager"
                   style={{
                     width: 44,
                     height: 44,
@@ -82,7 +82,7 @@ export default function Sidebar() {
 
                 <div>
                   <h2 style={{ fontSize: 19, letterSpacing: '-0.03em' }}>
-                    Fuel Enterprise
+                    Fuel Manager
                   </h2>
                   <p style={{ color: '#93a4bd', fontSize: 12 }}>
                     Contrôle carburant
