@@ -14,6 +14,7 @@ import reportsRoutes from './routes/reports.routes.js'
 import analyticsRoutes from './routes/analytics.routes.js'
 import monthlyClosingRoutes from './routes/monthlyClosing.routes.js'
 import vehicleHistoryRoutes from './routes/vehicleHistory.routes.js'
+import structuresRoutes from './routes/structures.routes.js'
 
 dotenv.config()
 
@@ -54,6 +55,7 @@ app.use('/api/reports', reportsRoutes)
 app.use('/api/analytics', analyticsRoutes)
 app.use('/api/monthly-closing', monthlyClosingRoutes)
 app.use('/api/vehicle-history', vehicleHistoryRoutes)
+app.use('/api/structures', structuresRoutes)
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Route introuvable' })
