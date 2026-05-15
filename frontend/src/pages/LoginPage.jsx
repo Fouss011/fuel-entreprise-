@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 import { loginUser } from '../api/api'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   
@@ -179,14 +181,46 @@ if (role === 'pompiste') {
           />
 
           <label style={labelStyle}>Mot de passe</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Entrez votre mot de passe"
-            className="form-input"
-            style={{ marginBottom: 18 }}
-          />
+          <div
+  style={{
+    position: 'relative',
+    marginBottom: 18
+  }}
+>
+  <input
+    type={showPassword ? 'text' : 'password'}
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    placeholder="Entrez votre mot de passe"
+    className="form-input"
+    style={{
+      paddingRight: 52
+    }}
+  />
+
+  <button
+    type="button"
+    onClick={() =>
+      setShowPassword(!showPassword)
+    }
+    style={{
+      position: 'absolute',
+      right: 14,
+      top: '50%',
+      transform: 'translateY(-50%)',
+      border: 'none',
+      background: 'transparent',
+      cursor: 'pointer',
+      color: '#64748b'
+    }}
+  >
+    {showPassword ? (
+      <EyeOff size={18} />
+    ) : (
+      <Eye size={18} />
+    )}
+  </button>
+</div>
 
           {error && (
             <p
