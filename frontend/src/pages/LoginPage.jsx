@@ -158,7 +158,7 @@ export default function LoginPage() {
             </h2>
 
             <p style={{ color: '#64748b' }}>
-              Connexion à la plateforme SNPT
+              Connexion à la plateforme
             </p>
           </div>
 
