@@ -9,15 +9,7 @@ export async function getVehicles(req, res) {
     let query = supabase
       .from('vehicles')
       .select(`
-        id,
-        plate_number,
-        brand,
-        model,
-        fuel_type,
-        division_id,
-        structure_id,
-        is_active,
-        created_at,
+        *,
         division:divisions(id, name, code),
         structure:structures(id, name, code)
       `)
@@ -40,8 +32,8 @@ export async function createVehicle(req, res) {
   try {
     const {
       plateNumber,
-      brand,
-      model,
+      label,
+      vehicleType,
       fuelType,
       divisionId
     } = req.body
@@ -60,22 +52,14 @@ export async function createVehicle(req, res) {
       .from('vehicles')
       .insert({
         plate_number: plateNumber.toUpperCase().trim(),
-        brand: brand || null,
-        model: model || null,
+        label: label || null,
+        vehicle_type: vehicleType || null,
         fuel_type: fuelType || 'diesel',
         division_id: divisionId || null,
         structure_id: structureId
       })
       .select(`
-        id,
-        plate_number,
-        brand,
-        model,
-        fuel_type,
-        division_id,
-        structure_id,
-        is_active,
-        created_at,
+        *,
         division:divisions(id, name, code),
         structure:structures(id, name, code)
       `)
