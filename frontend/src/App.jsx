@@ -11,6 +11,7 @@ import ReportsPage from './pages/ReportsPage'
 import AnalyticsPage from './pages/AnalyticsPage'
 import MonthlyClosingPage from './pages/MonthlyClosingPage'
 import VehicleHistoryPage from './pages/VehicleHistoryPage'
+import StructuresPage from './pages/StructuresPage'
 
 import RoleProtectedRoute from './components/RoleProtectedRoute'
 
@@ -161,6 +162,19 @@ export default function App() {
       ]}
     >
       <VehicleHistoryPage />
+    </RoleProtectedRoute>
+  }
+/>
+
+<Route
+  path="/structures"
+  element={
+    <RoleProtectedRoute
+      allowedRoles={[
+        'super_admin'
+      ]}
+    >
+      <StructuresPage />
     </RoleProtectedRoute>
   }
 />

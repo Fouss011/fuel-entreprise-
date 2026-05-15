@@ -243,3 +243,21 @@ export async function deleteFuelVoucher(id) {
 
   return response.json()
 }
+
+export async function getStructures() {
+  const response = await fetch(`${API_URL}/structures`, {
+    headers: authHeaders()
+  })
+
+  return response.json()
+}
+
+export async function createStructure(payload) {
+  const response = await fetch(`${API_URL}/structures`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(payload)
+  })
+
+  return response.json()
+}

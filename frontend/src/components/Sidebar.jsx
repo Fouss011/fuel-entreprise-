@@ -5,6 +5,7 @@ import {
   CalendarCheck,
   FileText,
   Fuel,
+  Layers,
   LogOut,
   Menu,
   ShieldCheck,
@@ -121,6 +122,15 @@ export default function Sidebar() {
             {hasRole('super_admin', 'direction', 'chef_division') && (
               <SidebarItem close={() => setOpen(false)} to="/" icon={<BarChart3 size={18} />} label="Vue générale" />
             )}
+
+            {hasRole('super_admin') && (
+  <SidebarItem
+    close={() => setOpen(false)}
+    to="/structures"
+    icon={<Layers size={18} />}
+    label="Structures"
+  />
+)}
 
             {hasRole('super_admin', 'direction') && (
               <SidebarItem close={() => setOpen(false)} to="/divisions" icon={<Building2 size={18} />} label="Divisions" />
