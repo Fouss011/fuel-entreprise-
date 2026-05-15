@@ -119,55 +119,105 @@ export default function Sidebar() {
           </div>
 
           <nav style={{ display: 'grid', gap: 6 }}>
-            {hasRole('super_admin', 'direction', 'chef_division') && (
-              <SidebarItem close={() => setOpen(false)} to="/" icon={<BarChart3 size={18} />} label="Vue générale" />
-            )}
+  {hasRole('super_admin', 'direction', 'chef_division') && (
+    <SidebarItem
+      close={() => setOpen(false)}
+      to="/"
+      icon={<BarChart3 size={18} />}
+      label="Vue générale"
+    />
+  )}
 
-            {hasRole('super_admin') && (
-  <SidebarItem
-    close={() => setOpen(false)}
-    to="/structures"
-    icon={<Layers size={18} />}
-    label="Structures"
-  />
-)}
+  {hasRole('super_admin') && (
+    <SidebarItem
+      close={() => setOpen(false)}
+      to="/structures"
+      icon={<Layers size={18} />}
+      label="Structures"
+    />
+  )}
 
-            {hasRole('super_admin', 'direction') && (
-              <SidebarItem close={() => setOpen(false)} to="/divisions" icon={<Building2 size={18} />} label="Divisions" />
-            )}
+  {hasRole('super_admin', 'direction', 'chef_division') && (
+    <SidebarItem
+      close={() => setOpen(false)}
+      to="/users"
+      icon={<Users size={18} />}
+      label="Utilisateurs"
+    />
+  )}
 
-            {hasRole('super_admin', 'direction', 'chef_division') && (
-              <SidebarItem close={() => setOpen(false)} to="/vehicles" icon={<Truck size={18} />} label="Véhicules" />
-            )}
+  {hasRole('super_admin', 'direction') && (
+    <SidebarItem
+      close={() => setOpen(false)}
+      to="/divisions"
+      icon={<Building2 size={18} />}
+      label="Divisions"
+    />
+  )}
 
-            {hasRole('super_admin', 'direction', 'chef_division') && (
-              <SidebarItem close={() => setOpen(false)} to="/vehicle-history" icon={<Truck size={18} />} label="Historique véhicule" />
-            )}
+  {hasRole('super_admin', 'direction', 'chef_division') && (
+    <SidebarItem
+      close={() => setOpen(false)}
+      to="/vehicles"
+      icon={<Truck size={18} />}
+      label="Véhicules"
+    />
+  )}
 
-            {hasRole('super_admin', 'direction', 'chef_division') && (
-              <SidebarItem close={() => setOpen(false)} to="/users" icon={<Users size={18} />} label="Utilisateurs" />
-            )}
+  {hasRole('super_admin', 'direction', 'chef_division') && (
+    <SidebarItem
+      close={() => setOpen(false)}
+      to="/vouchers"
+      icon={<FileText size={18} />}
+      label="Bons carburant"
+    />
+  )}
 
-            {hasRole('super_admin', 'direction', 'chef_division') && (
-              <SidebarItem close={() => setOpen(false)} to="/vouchers" icon={<FileText size={18} />} label="Bons carburant" />
-            )}
+  {hasRole('super_admin', 'direction', 'pompiste') && (
+    <SidebarItem
+      close={() => setOpen(false)}
+      to="/pump"
+      icon={<Fuel size={18} />}
+      label="Pompiste"
+    />
+  )}
 
-            {hasRole('super_admin', 'direction', 'pompiste') && (
-              <SidebarItem close={() => setOpen(false)} to="/pump" icon={<Fuel size={18} />} label="Pompiste" />
-            )}
+  {hasRole('super_admin', 'direction') && (
+    <SidebarItem
+      close={() => setOpen(false)}
+      to="/reports"
+      icon={<ShieldCheck size={18} />}
+      label="Rapports"
+    />
+  )}
 
-            {hasRole('super_admin', 'direction') && (
-              <SidebarItem close={() => setOpen(false)} to="/reports" icon={<ShieldCheck size={18} />} label="Rapports" />
-            )}
+  {hasRole('super_admin', 'direction', 'chef_division') && (
+    <SidebarItem
+      close={() => setOpen(false)}
+      to="/vehicle-history"
+      icon={<Truck size={18} />}
+      label="Historique véhicule"
+    />
+  )}
 
-            {hasRole('super_admin', 'direction') && (
-              <SidebarItem close={() => setOpen(false)} to="/analytics" icon={<Activity size={18} />} label="Analytics" />
-            )}
+  {hasRole('super_admin', 'direction') && (
+    <SidebarItem
+      close={() => setOpen(false)}
+      to="/analytics"
+      icon={<Activity size={18} />}
+      label="Analytics"
+    />
+  )}
 
-            {hasRole('super_admin', 'direction') && (
-              <SidebarItem close={() => setOpen(false)} to="/monthly-closing" icon={<CalendarCheck size={18} />} label="Clôture mensuelle" />
-            )}
-          </nav>
+  {hasRole('super_admin', 'direction') && (
+    <SidebarItem
+      close={() => setOpen(false)}
+      to="/monthly-closing"
+      icon={<CalendarCheck size={18} />}
+      label="Clôture mensuelle"
+    />
+  )}
+</nav>
         </div>
 
         <button onClick={logout} className="sidebar-logout">
