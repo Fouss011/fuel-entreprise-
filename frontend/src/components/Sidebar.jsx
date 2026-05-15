@@ -30,28 +30,30 @@ export default function Sidebar() {
   return (
     <>
       <div className="mobile-nav">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img
-            src="/favicon.png"
-            alt="Fuel Manager"
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 10,
-              objectFit: 'contain',
-              background: '#ffffff'
-            }}
-          />
-
-          <div>
-            <strong>Fuel manager</strong>
-            <p style={{ color: '#94a3b8', fontSize: 12 }}>Contrôle carburant</p>
-          </div>
-        </div>
-
         <button className="mobile-menu-btn" onClick={() => setOpen(true)}>
-          <Menu size={24} />
-        </button>
+  <Menu size={24} />
+</button>
+
+<div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+  <img
+    src="/favicon.png"
+    alt="Fuel Manager"
+    style={{
+      width: 38,
+      height: 38,
+      borderRadius: 10,
+      objectFit: 'contain',
+      background: '#ffffff'
+    }}
+  />
+
+  <div>
+    <strong>Fuel manager</strong>
+    <p style={{ color: '#94a3b8', fontSize: 12 }}>
+      Contrôle carburant
+    </p>
+  </div>
+</div>
       </div>
 
       {open && <div className="sidebar-overlay" onClick={() => setOpen(false)} />}
