@@ -3,8 +3,8 @@ import { Fuel } from 'lucide-react'
 import { loginUser } from '../api/api'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('admin@snpt.tg')
-  const [password, setPassword] = useState('admin123')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [mobile, setMobile] = useState(window.innerWidth <= 900)
@@ -178,7 +178,7 @@ export default function LoginPage() {
           <input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
+            placeholder="Entrez votre email"
             className="form-input"
             style={{ marginBottom: 16 }}
           />
@@ -189,7 +189,7 @@ export default function LoginPage() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Mot de passe"
+            placeholder="Entrez votre mot de passe"
             className="form-input"
             style={{ marginBottom: 18 }}
           />
