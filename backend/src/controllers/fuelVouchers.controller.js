@@ -9,20 +9,10 @@ export async function getFuelVouchers(req, res) {
     let query = supabase
       .from('fuel_vouchers')
       .select(`
-        id,
-        voucher_number,
-        vehicle_id,
-        driver_name,
-        quantity_liters,
-        fuel_type,
-        status,
-        issued_at,
-        used_at,
-        division_id,
-        structure_id,
-        created_at,
-        vehicle:vehicles(id, plate_number, brand, model),
+        *,
         division:divisions(id, name, code),
+        vehicle:vehicles(id, plate_number, label),
+        driver:users_profile!fuel_vouchers_driver_id_fkey(id, full_name),
         structure:structures(id, name, code)
       `)
       .order('created_at', { ascending: false })
@@ -42,16 +32,23 @@ export async function getFuelVouchers(req, res) {
 
 export async function createFuelVoucher(req, res) {
   try {
-    const {
-      voucherNumber,
-      vehicleId,
-      driverName,
-      quantityLiters,
-      fuelType,
-      divisionId
-    } = req.body
+    const vehicleId = req.body.vehicleId || req.body.vehicle_id
+const driverId = req.body.driverId || req.body.driver_id
+const divisionId = req.body.divisionId || req.body.division_id
+const fuelType = req.body.fuelType || req.body.fuel_type
+const requestedLiters =
+  req.body.requestedLiters ||
+  req.body.requested_liters ||
+  req.body.quantityLiters ||
+  req.body.quantity_liters
 
-    if (!vehicleId || !driverName || !quantityLiters) {
+const approvedLiters =
+  req.body.approvedLiters ||
+  req.body.approved_liters
+
+const reason = req.body.reason || req.body.mission || req.body.notes
+
+    if (!vehicleId || !driverId || !requestedLiters) {
       return res.status(400).json({
         error: 'Véhicule, chauffeur et quantité requis'
       })
@@ -63,38 +60,27 @@ export async function createFuelVoucher(req, res) {
       return res.status(400).json({ error: 'Structure obligatoire' })
     }
 
-    const finalVoucherNumber =
-      voucherNumber ||
-      `BON-${Date.now().toString().slice(-8)}`
+    const voucherNumber = `BON-${Date.now().toString().slice(-8)}`
 
     const { data, error } = await supabase
       .from('fuel_vouchers')
       .insert({
-        voucher_number: finalVoucherNumber,
+        voucher_number: voucherNumber,
         vehicle_id: vehicleId,
-        driver_name: driverName,
-        quantity_liters: Number(quantityLiters),
-        fuel_type: fuelType || 'diesel',
+        driver_id: driverId,
         division_id: divisionId || null,
-        structure_id: structureId,
-        status: 'issued',
-        issued_at: new Date().toISOString()
+        fuel_type: fuelType || 'diesel',
+        requested_liters: Number(requestedLiters),
+        approved_liters: approvedLiters ? Number(approvedLiters) : null,
+        reason: reason || mission || notes || null,
+        status: 'pending',
+        structure_id: structureId
       })
       .select(`
-        id,
-        voucher_number,
-        vehicle_id,
-        driver_name,
-        quantity_liters,
-        fuel_type,
-        status,
-        issued_at,
-        used_at,
-        division_id,
-        structure_id,
-        created_at,
-        vehicle:vehicles(id, plate_number, brand, model),
+        *,
         division:divisions(id, name, code),
+        vehicle:vehicles(id, plate_number, label),
+        driver:users_profile!fuel_vouchers_driver_id_fkey(id, full_name),
         structure:structures(id, name, code)
       `)
       .single()
@@ -108,19 +94,18 @@ export async function createFuelVoucher(req, res) {
   }
 }
 
-export async function updateFuelVoucherStatus(req, res) {
+export async function approveFuelVoucher(req, res) {
   try {
     const { id } = req.params
-    const { status } = req.body
+    const { approvedLiters } = req.body
 
-    if (!status) {
-      return res.status(400).json({ error: 'Statut requis' })
+    const payload = {
+      status: 'approved',
+      approved_at: new Date().toISOString()
     }
 
-    const payload = { status }
-
-    if (status === 'used') {
-      payload.used_at = new Date().toISOString()
+    if (approvedLiters) {
+      payload.approved_liters = Number(approvedLiters)
     }
 
     let query = supabase
@@ -132,20 +117,10 @@ export async function updateFuelVoucherStatus(req, res) {
 
     const { data, error } = await query
       .select(`
-        id,
-        voucher_number,
-        vehicle_id,
-        driver_name,
-        quantity_liters,
-        fuel_type,
-        status,
-        issued_at,
-        used_at,
-        division_id,
-        structure_id,
-        created_at,
-        vehicle:vehicles(id, plate_number, brand, model),
+        *,
         division:divisions(id, name, code),
+        vehicle:vehicles(id, plate_number, label),
+        driver:users_profile!fuel_vouchers_driver_id_fkey(id, full_name),
         structure:structures(id, name, code)
       `)
       .single()
@@ -154,24 +129,62 @@ export async function updateFuelVoucherStatus(req, res) {
 
     return res.json({ voucher: data })
   } catch (error) {
-    console.error('UPDATE_FUEL_VOUCHER_STATUS_ERROR =>', error)
-    return res.status(500).json({ error: 'Erreur modification bon carburant' })
+    console.error('APPROVE_FUEL_VOUCHER_ERROR =>', error)
+    return res.status(500).json({ error: 'Erreur validation bon carburant' })
   }
 }
 
-export async function approveFuelVoucher(req, res) {
-  req.body.status = 'approved'
-  return updateFuelVoucherStatus(req, res)
-}
-
 export async function rejectFuelVoucher(req, res) {
-  req.body.status = 'rejected'
-  return updateFuelVoucherStatus(req, res)
+  try {
+    const { id } = req.params
+
+    let query = supabase
+      .from('fuel_vouchers')
+      .update({
+        status: 'rejected'
+      })
+      .eq('id', id)
+
+    query = applyStructureScope(query, req)
+
+    const { data, error } = await query
+      .select('*')
+      .single()
+
+    if (error) return res.status(400).json({ error: error.message })
+
+    return res.json({ voucher: data })
+  } catch (error) {
+    console.error('REJECT_FUEL_VOUCHER_ERROR =>', error)
+    return res.status(500).json({ error: 'Erreur rejet bon carburant' })
+  }
 }
 
 export async function useFuelVoucher(req, res) {
-  req.body.status = 'used'
-  return updateFuelVoucherStatus(req, res)
+  try {
+    const { id } = req.params
+
+    let query = supabase
+      .from('fuel_vouchers')
+      .update({
+        status: 'used',
+        used_at: new Date().toISOString()
+      })
+      .eq('id', id)
+
+    query = applyStructureScope(query, req)
+
+    const { data, error } = await query
+      .select('*')
+      .single()
+
+    if (error) return res.status(400).json({ error: error.message })
+
+    return res.json({ voucher: data })
+  } catch (error) {
+    console.error('USE_FUEL_VOUCHER_ERROR =>', error)
+    return res.status(500).json({ error: 'Erreur utilisation bon carburant' })
+  }
 }
 
 export async function deleteFuelVoucher(req, res) {
