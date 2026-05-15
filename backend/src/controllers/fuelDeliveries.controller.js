@@ -113,14 +113,15 @@ export async function deliverFuel(req, res) {
     }
 
     let voucherQuery = supabase
-      .from('fuel_vouchers')
-      .select(`
-        id,
-        approved_liters,
-        status,
-        structure_id
-      `)
-      .eq('id', voucherId)
+  .from('fuel_vouchers')
+  .select(`
+    id,
+    approved_liters,
+    status,
+    structure_id
+  `)
+  .eq('id', voucherId)
+  .eq('status', 'approved')
 
     if (req.user.role !== 'super_admin') {
       voucherQuery = voucherQuery.eq('structure_id', structureId)
@@ -170,18 +171,25 @@ export async function deliverFuel(req, res) {
       })
     }
 
-    await supabase
-      .from('fuel_vouchers')
-      .update({
-        status: 'used',
-        used_at: new Date().toISOString()
-      })
-      .eq('id', voucherId)
-      .eq('structure_id', finalStructureId)
+    const { error: updateVoucherError } = await supabase
+  .from('fuel_vouchers')
+  .update({
+    status: 'used',
+    used_at: new Date().toISOString()
+  })
+  .eq('id', voucherId)
+  .eq('status', 'approved')
+  .eq('structure_id', finalStructureId)
 
-    return res.status(201).json({
-      delivery
-    })
+if (updateVoucherError) {
+  return res.status(400).json({
+    error: updateVoucherError.message
+  })
+}
+
+return res.status(201).json({
+  delivery
+})
   } catch (error) {
     console.error('DELIVER_FUEL_ERROR =>', error)
 
