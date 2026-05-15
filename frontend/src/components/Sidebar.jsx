@@ -48,19 +48,18 @@ export default function Sidebar() {
               marginBottom: 20
             }}
           >
-            <div
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 12,
-                background: '#ffffff',
-                color: '#07172f',
-                display: 'grid',
-                placeItems: 'center'
-              }}
-            >
-              <Fuel size={24} />
-            </div>
+            <img
+  src="/logo.png"
+  alt="Fuel Manager"
+  style={{
+    width: 52,
+    height: 52,
+    borderRadius: 12,
+    objectFit: 'cover',
+    background: '#ffffff',
+    padding: 4
+  }}
+/>
 
             <div>
               <h2 style={{ fontSize: 19, letterSpacing: '-0.03em' }}>
