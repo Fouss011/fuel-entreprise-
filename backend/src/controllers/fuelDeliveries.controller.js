@@ -45,6 +45,7 @@ export async function searchVoucherByCode(req, res) {
         driver:users_profile!fuel_vouchers_driver_id_fkey(id, full_name),
         structure:structures(id, name, code)
       `)
+      .eq('status', 'approved')
       .ilike('voucher_number', `%${code}%`)
       .order('created_at', { ascending: false })
       .limit(10)

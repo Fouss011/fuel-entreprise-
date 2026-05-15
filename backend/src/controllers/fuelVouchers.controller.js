@@ -15,6 +15,7 @@ export async function getFuelVouchers(req, res) {
         driver:users_profile!fuel_vouchers_driver_id_fkey(id, full_name),
         structure:structures(id, name, code)
       `)
+      .neq('status', 'used')
       .order('created_at', { ascending: false })
 
     query = applyStructureScope(query, req)

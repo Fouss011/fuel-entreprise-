@@ -22,9 +22,9 @@ export default function LoginPage() {
       }
 
       localStorage.setItem('fuel_token', data.token)
-      localStorage.setItem('fuel_user', JSON.stringify(data.user))
+localStorage.setItem('fuel_user', JSON.stringify(data.user))
 
-      if (data.user?.role === 'pompiste') {
+if (data.user?.role === 'pompiste') {
   window.location.href = '/pump'
 } else {
   window.location.href = '/'
