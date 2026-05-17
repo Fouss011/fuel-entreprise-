@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import {
   CalendarDays,
@@ -130,7 +130,7 @@ export default function MonthlyClosingPage() {
         </div>
       </div>
 
-      <div ref={exportRef}>
+      <div>
         <div className="panel" style={{ marginBottom: 22 }}>
           <h3 className="panel-title">Période d’analyse</h3>
 
