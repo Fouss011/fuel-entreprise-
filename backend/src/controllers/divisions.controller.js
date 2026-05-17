@@ -12,6 +12,7 @@ export async function getDivisions(req, res) {
         id,
         name,
         code,
+        manager_name,
         structure_id,
         created_at,
         structure:structures(id, name, code)
@@ -33,7 +34,7 @@ export async function getDivisions(req, res) {
 
 export async function createDivision(req, res) {
   try {
-    const { name, code } = req.body
+    const { name, code, managerName } = req.body
 
     if (!name || !code) {
       return res.status(400).json({ error: 'Nom et code division requis' })
@@ -50,12 +51,14 @@ export async function createDivision(req, res) {
       .insert({
         name: name.trim(),
         code: code.toUpperCase().trim(),
+        manager_name: managerName || null,
         structure_id: structureId
       })
       .select(`
         id,
         name,
         code,
+        manager_name,
         structure_id,
         created_at,
         structure:structures(id, name, code)
