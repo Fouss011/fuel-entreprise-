@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FileText, Fuel, Wallet } from 'lucide-react'
 
 import MainLayout from '../layouts/MainLayout'
@@ -7,8 +7,8 @@ import EntityCard from '../components/EntityCard'
 import SearchSelect from '../components/SearchSelect'
 
 import {
-  getDeliveriesReport,
-  getVehicles
+  getVehicleHistory,
+getVehicles
 } from '../api/api'
 
 export default function VehicleHistoryPage() {
@@ -18,40 +18,35 @@ export default function VehicleHistoryPage() {
   const [vehicleId, setVehicleId] = useState('')
   const [month, setMonth] = useState('')
 
-  async function loadData() {
-    const [deliveriesData, vehiclesData] = await Promise.all([
-      getDeliveriesReport(),
-      getVehicles()
-    ])
+  async function loadVehicles() {
+  const vehiclesData = await getVehicles()
 
-    setDeliveries(deliveriesData.deliveries || [])
-    setVehicles(vehiclesData.vehicles || [])
+  setVehicles(vehiclesData.vehicles || [])
 
-    if (!vehicleId && vehiclesData.vehicles?.[0]) {
-      setVehicleId(vehiclesData.vehicles[0].id)
-    }
+  if (!vehicleId && vehiclesData.vehicles?.[0]) {
+    setVehicleId(vehiclesData.vehicles[0].id)
   }
+}
 
-  useEffect(() => {
-    loadData()
-  }, [])
+async function loadHistory(id = vehicleId, selectedMonth = month) {
+  if (!id) return
 
-  const filteredDeliveries = useMemo(() => {
-    return deliveries.filter((item) => {
-      const matchesVehicle =
-        !vehicleId ||
-        item.voucher?.vehicle?.id === vehicleId
+  const historyData = await getVehicleHistory(id, selectedMonth)
 
-      const deliveryMonth =
-        item.delivered_at?.slice(0, 7)
+  setDeliveries(historyData.deliveries || [])
+}
 
-      const matchesMonth =
-        !month ||
-        deliveryMonth === month
+useEffect(() => {
+  loadVehicles()
+}, [])
 
-      return matchesVehicle && matchesMonth
-    })
-  }, [deliveries, vehicleId, month])
+useEffect(() => {
+  if (vehicleId) {
+    loadHistory(vehicleId, month)
+  }
+}, [vehicleId, month])
+
+const filteredDeliveries = deliveries
 
   const stats = useMemo(() => {
     return {
