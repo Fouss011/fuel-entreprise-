@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import {
   CalendarDays,
@@ -12,131 +12,49 @@ import StatCard from '../components/StatCard'
 import EntityCard from '../components/EntityCard'
 
 import {
-  getDeliveriesReport
+  getMonthlyClosing
 } from '../api/api'
 
 export default function MonthlyClosingPage() {
-  const [deliveries, setDeliveries] = useState([])
   const [month, setMonth] = useState(
     new Date().toISOString().slice(0, 7)
   )
 
-  async function loadData() {
-    const data = await getDeliveriesReport()
-    setDeliveries(data.deliveries || [])
+  const [summary, setSummary] = useState({
+    totalDeliveries: 0,
+    totalLiters: 0,
+    totalAmount: 0
+  })
+
+  const [vehicles, setVehicles] = useState([])
+  const [divisions, setDivisions] = useState([])
+
+  async function loadData(selectedMonth = month) {
+    const data = await getMonthlyClosing(selectedMonth)
+
+    setSummary(
+      data.summary || {
+        totalDeliveries: 0,
+        totalLiters: 0,
+        totalAmount: 0
+      }
+    )
+
+    setVehicles(data.byVehicle || [])
+    setDivisions(data.byDivision || [])
   }
 
   useEffect(() => {
-    loadData()
-  }, [])
-
-  const filteredDeliveries = useMemo(() => {
-    return deliveries.filter(
-      (item) =>
-        item.delivered_at?.slice(0, 7) === month
-    )
-  }, [deliveries, month])
-
-  const stats = useMemo(() => {
-    return {
-      totalDeliveries:
-        filteredDeliveries.length,
-
-      totalLiters:
-        filteredDeliveries.reduce(
-          (sum, item) =>
-            sum +
-            Number(item.delivered_liters || 0),
-          0
-        ),
-
-      totalAmount:
-        filteredDeliveries.reduce(
-          (sum, item) =>
-            sum +
-            Number(item.total_amount || 0),
-          0
-        )
-    }
-  }, [filteredDeliveries])
-
-  const divisions = useMemo(() => {
-    const map = {}
-
-    filteredDeliveries.forEach((item) => {
-      const division =
-        item.voucher?.division
-
-      if (!division) return
-
-      if (!map[division.id]) {
-        map[division.id] = {
-          name: division.name,
-          code: division.code,
-          liters: 0,
-          amount: 0,
-          deliveries: 0
-        }
-      }
-
-      map[division.id].liters += Number(
-        item.delivered_liters || 0
-      )
-
-      map[division.id].amount += Number(
-        item.total_amount || 0
-      )
-
-      map[division.id].deliveries += 1
-    })
-
-    return Object.values(map)
-  }, [filteredDeliveries])
-
-  const vehicles = useMemo(() => {
-    const map = {}
-
-    filteredDeliveries.forEach((item) => {
-      const vehicle =
-        item.voucher?.vehicle
-
-      if (!vehicle) return
-
-      if (!map[vehicle.id]) {
-        map[vehicle.id] = {
-          plate: vehicle.plate_number,
-          label: vehicle.label,
-          liters: 0,
-          amount: 0,
-          deliveries: 0
-        }
-      }
-
-      map[vehicle.id].liters += Number(
-        item.delivered_liters || 0
-      )
-
-      map[vehicle.id].amount += Number(
-        item.total_amount || 0
-      )
-
-      map[vehicle.id].deliveries += 1
-    })
-
-    return Object.values(map)
-  }, [filteredDeliveries])
+    loadData(month)
+  }, [month])
 
   return (
     <MainLayout>
       <div className="page-header">
         <div>
-          <p className="page-eyebrow">
-            Audit mensuel
-          </p>
+          <p className="page-eyebrow">Audit mensuel</p>
 
-          <h1 className="page-title">
-            Clôture mensuelle
-          </h1>
+          <h1 className="page-title">Clôture mensuelle</h1>
 
           <p className="page-subtitle">
             Consolidation des consommations carburant par véhicule et division.
@@ -145,22 +63,13 @@ export default function MonthlyClosingPage() {
       </div>
 
       <div className="panel" style={{ marginBottom: 22 }}>
-        <h3 className="panel-title">
-          Période d’analyse
-        </h3>
+        <h3 className="panel-title">Période d’analyse</h3>
 
-        <div
-          style={{
-            marginTop: 14,
-            maxWidth: 320
-          }}
-        >
+        <div style={{ marginTop: 14, maxWidth: 320 }}>
           <input
             type="month"
             value={month}
-            onChange={(e) =>
-              setMonth(e.target.value)
-            }
+            onChange={(e) => setMonth(e.target.value)}
             className="form-input"
           />
         </div>
@@ -177,7 +86,7 @@ export default function MonthlyClosingPage() {
 
         <StatCard
           title="Livraisons"
-          value={stats.totalDeliveries}
+          value={summary.totalDeliveries}
           subtitle="Opérations confirmées"
           icon={<FileText size={21} />}
           tone="blue"
@@ -185,7 +94,7 @@ export default function MonthlyClosingPage() {
 
         <StatCard
           title="Litres"
-          value={stats.totalLiters}
+          value={summary.totalLiters}
           subtitle="Volume total"
           icon={<Fuel size={21} />}
           tone="green"
@@ -193,7 +102,7 @@ export default function MonthlyClosingPage() {
 
         <StatCard
           title="Montant"
-          value={`${stats.totalAmount} FCFA`}
+          value={`${summary.totalAmount} FCFA`}
           subtitle="Coût mensuel"
           icon={<Wallet size={21} />}
           tone="amber"
@@ -202,37 +111,28 @@ export default function MonthlyClosingPage() {
 
       <div className="panel-grid">
         <div className="panel">
-          <h3 className="panel-title">
-            Consommation par véhicule
-          </h3>
+          <h3 className="panel-title">Consommation par véhicule</h3>
 
           <p className="panel-subtitle">
             Classement mensuel de la flotte.
           </p>
 
-          <div
-            style={{
-              display: 'grid',
-              gap: 14
-            }}
-          >
-            {vehicles.map((vehicle, index) => (
+          <div style={{ display: 'grid', gap: 14 }}>
+            {vehicles.map((vehicle) => (
               <EntityCard
-                key={index}
-                title={vehicle.plate}
-                subtitle={
-                  vehicle.label || 'Véhicule'
-                }
+                key={vehicle.id}
+                title={vehicle.plateNumber}
+                subtitle={vehicle.label || 'Véhicule'}
                 badge="FLOTTE"
                 badgeTone="blue"
                 items={[
                   {
                     label: 'Litres',
-                    value: `${vehicle.liters} L`
+                    value: `${vehicle.totalLiters} L`
                   },
                   {
                     label: 'Montant',
-                    value: `${vehicle.amount} FCFA`
+                    value: `${vehicle.totalAmount} FCFA`
                   },
                   {
                     label: 'Livraisons',
@@ -241,27 +141,35 @@ export default function MonthlyClosingPage() {
                 ]}
               />
             ))}
+
+            {vehicles.length === 0 && (
+              <EntityCard
+                title="Aucune donnée véhicule"
+                subtitle="Clôture mensuelle"
+                badge="VIDE"
+                badgeTone="blue"
+                items={[
+                  {
+                    label: 'Mois',
+                    value: month
+                  }
+                ]}
+              />
+            )}
           </div>
         </div>
 
         <div className="panel">
-          <h3 className="panel-title">
-            Consommation par division
-          </h3>
+          <h3 className="panel-title">Consommation par division</h3>
 
           <p className="panel-subtitle">
             Répartition mensuelle par service.
           </p>
 
-          <div
-            style={{
-              display: 'grid',
-              gap: 14
-            }}
-          >
-            {divisions.map((division, index) => (
+          <div style={{ display: 'grid', gap: 14 }}>
+            {divisions.map((division) => (
               <EntityCard
-                key={index}
+                key={division.id}
                 title={division.name}
                 subtitle={`Code : ${division.code}`}
                 badge="SERVICE"
@@ -269,11 +177,11 @@ export default function MonthlyClosingPage() {
                 items={[
                   {
                     label: 'Litres',
-                    value: `${division.liters} L`
+                    value: `${division.totalLiters} L`
                   },
                   {
                     label: 'Montant',
-                    value: `${division.amount} FCFA`
+                    value: `${division.totalAmount} FCFA`
                   },
                   {
                     label: 'Livraisons',
@@ -282,6 +190,21 @@ export default function MonthlyClosingPage() {
                 ]}
               />
             ))}
+
+            {divisions.length === 0 && (
+              <EntityCard
+                title="Aucune donnée division"
+                subtitle="Clôture mensuelle"
+                badge="VIDE"
+                badgeTone="green"
+                items={[
+                  {
+                    label: 'Mois',
+                    value: month
+                  }
+                ]}
+              />
+            )}
           </div>
         </div>
       </div>
