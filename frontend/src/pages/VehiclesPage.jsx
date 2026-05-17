@@ -21,6 +21,7 @@ export default function VehiclesPage() {
 
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [visibleCount, setVisibleCount] = useState(10)
 
   async function loadData() {
     const [vehiclesData, divisionsData] = await Promise.all([
@@ -118,7 +119,9 @@ const filteredVehicles = vehicles.filter((vehicle) => {
           <p className="panel-subtitle">Véhicules rattachés aux divisions.</p>
 
           <div style={{ display: 'grid', gap: 12 }}>
-  {filteredVehicles.map((vehicle) => (
+  {filteredVehicles
+  .slice(0, visibleCount)
+  .map((vehicle) => (
     <EntityCard
       key={vehicle.id}
       title={vehicle.plate_number}
@@ -142,6 +145,15 @@ const filteredVehicles = vehicles.filter((vehicle) => {
       ]}
     />
   ))}
+
+  {filteredVehicles.length > visibleCount && (
+  <button
+    className="btn-secondary"
+    onClick={() => setVisibleCount(visibleCount + 10)}
+  >
+    Voir plus
+  </button>
+)}
 
   {filteredVehicles.length === 0 && (
     <p style={{ color: '#94a3b8' }}>Aucun véhicule enregistré.</p>

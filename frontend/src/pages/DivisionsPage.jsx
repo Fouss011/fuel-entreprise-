@@ -11,6 +11,7 @@ export default function DivisionsPage() {
   const [managerName, setManagerName] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [visibleCount, setVisibleCount] = useState(10)
 
   async function loadDivisions() {
     const data = await getDivisions()
@@ -102,7 +103,9 @@ export default function DivisionsPage() {
           <p className="panel-subtitle">Toutes les entités enregistrées.</p>
 
           <div style={{ display: 'grid', gap: 12 }}>
-            {filteredDivisions.map((division) => (
+            {filteredDivisions
+  .slice(0, visibleCount)
+  .map((division) => (
   <EntityCard
     key={division.id}
     title={division.name}
@@ -122,6 +125,15 @@ export default function DivisionsPage() {
     ]}
   />
 ))}
+
+{filteredDivisions.length > visibleCount && (
+  <button
+    className="btn-secondary"
+    onClick={() => setVisibleCount(visibleCount + 10)}
+  >
+    Voir plus
+  </button>
+)}
 
             {filteredDivisions.length === 0 && (
               <p style={{ color: '#94a3b8' }}>Aucune division enregistrée.</p>

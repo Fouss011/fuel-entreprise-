@@ -41,6 +41,7 @@ export default function UsersPage() {
 
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [visibleCount, setVisibleCount] = useState(10)
 
   async function loadData() {
     setError('')
@@ -180,7 +181,9 @@ export default function UsersPage() {
           <p className="panel-subtitle">Comptes actifs de la plateforme.</p>
 
           <div style={{ display: 'grid', gap: 12 }}>
-            {filteredUsers.map((user) => (
+            {filteredUsers
+  .slice(0, visibleCount)
+  .map((user) => (
               <EntityCard
                 key={user.id}
                 title={user.full_name}
@@ -208,6 +211,17 @@ export default function UsersPage() {
                 ]}
               />
             ))}
+
+            {filteredUsers.length > visibleCount && (
+  <button
+    className="btn-secondary"
+    onClick={() =>
+      setVisibleCount(visibleCount + 10)
+    }
+  >
+    Voir plus
+  </button>
+)}
 
             {filteredUsers.length === 0 && (
               <p style={{ color: '#94a3b8' }}>Aucun utilisateur enregistré.</p>

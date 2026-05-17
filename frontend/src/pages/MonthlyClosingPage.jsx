@@ -1,21 +1,24 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import {
   CalendarDays,
+  Download,
   FileText,
   Fuel,
   Wallet
 } from 'lucide-react'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
 
 import MainLayout from '../layouts/MainLayout'
 import StatCard from '../components/StatCard'
 import EntityCard from '../components/EntityCard'
 
-import {
-  getMonthlyClosing
-} from '../api/api'
+import { getMonthlyClosing } from '../api/api'
 
 export default function MonthlyClosingPage() {
+  const exportRef = useRef(null)
+
   const [month, setMonth] = useState(
     new Date().toISOString().slice(0, 7)
   )
@@ -31,6 +34,7 @@ export default function MonthlyClosingPage() {
 
   const [visibleVehicles, setVisibleVehicles] = useState(10)
   const [visibleDivisions, setVisibleDivisions] = useState(10)
+  const [exporting, setExporting] = useState(false)
 
   async function loadData(selectedMonth = month) {
     const data = await getMonthlyClosing(selectedMonth)
@@ -50,6 +54,41 @@ export default function MonthlyClosingPage() {
     setVisibleDivisions(10)
   }
 
+  async function exportPDF() {
+    if (!exportRef.current) return
+
+    setExporting(true)
+
+    const canvas = await html2canvas(exportRef.current, {
+      scale: 2,
+      backgroundColor: '#f3f6fb'
+    })
+
+    const imgData = canvas.toDataURL('image/png')
+    const pdf = new jsPDF('p', 'mm', 'a4')
+
+    const pdfWidth = pdf.internal.pageSize.getWidth()
+    const pdfHeight = pdf.internal.pageSize.getHeight()
+    const imgWidth = pdfWidth
+    const imgHeight = (canvas.height * imgWidth) / canvas.width
+
+    let heightLeft = imgHeight
+    let position = 0
+
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+    heightLeft -= pdfHeight
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight
+      pdf.addPage()
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+      heightLeft -= pdfHeight
+    }
+
+    pdf.save(`cloture-mensuelle-${month}.pdf`)
+    setExporting(false)
+  }
+
   useEffect(() => {
     loadData(month)
   }, [month])
@@ -59,180 +98,185 @@ export default function MonthlyClosingPage() {
       <div className="page-header">
         <div>
           <p className="page-eyebrow">Audit mensuel</p>
-
           <h1 className="page-title">Clôture mensuelle</h1>
-
           <p className="page-subtitle">
             Consolidation des consommations carburant par véhicule et division.
           </p>
         </div>
-      </div>
 
-      <div className="panel" style={{ marginBottom: 22 }}>
-        <h3 className="panel-title">Période d’analyse</h3>
-
-        <div style={{ marginTop: 14, maxWidth: 320 }}>
-          <input
-            type="month"
-            value={month}
-            onChange={(e) => setMonth(e.target.value)}
-            className="form-input"
-          />
+        <div className="header-actions">
+          <button className="btn-secondary" onClick={exportPDF} disabled={exporting}>
+            <Download size={16} />
+            {exporting ? 'Export...' : 'Exporter PDF'}
+          </button>
         </div>
       </div>
 
-      <section className="dashboard-grid">
-        <StatCard
-          title="Mois"
-          value={month}
-          subtitle="Période analysée"
-          icon={<CalendarDays size={21} />}
-          tone="blue"
-        />
+      <div ref={exportRef}>
+        <div className="panel" style={{ marginBottom: 22 }}>
+          <h3 className="panel-title">Période d’analyse</h3>
 
-        <StatCard
-          title="Livraisons"
-          value={summary.totalDeliveries}
-          subtitle="Opérations confirmées"
-          icon={<FileText size={21} />}
-          tone="blue"
-        />
-
-        <StatCard
-          title="Litres"
-          value={summary.totalLiters}
-          subtitle="Volume total"
-          icon={<Fuel size={21} />}
-          tone="green"
-        />
-
-        <StatCard
-          title="Montant"
-          value={`${summary.totalAmount} FCFA`}
-          subtitle="Coût mensuel"
-          icon={<Wallet size={21} />}
-          tone="amber"
-        />
-      </section>
-
-      <div className="panel-grid">
-        <div className="panel">
-          <h3 className="panel-title">Consommation par véhicule</h3>
-
-          <p className="panel-subtitle">
-            Classement mensuel de la flotte.
-          </p>
-
-          <div style={{ display: 'grid', gap: 14 }}>
-            {vehicles
-              .slice(0, visibleVehicles)
-              .map((vehicle) => (
-                <EntityCard
-                  key={vehicle.id}
-                  title={vehicle.plateNumber}
-                  subtitle={vehicle.label || 'Véhicule'}
-                  badge="FLOTTE"
-                  badgeTone="blue"
-                  items={[
-                    {
-                      label: 'Litres',
-                      value: `${vehicle.totalLiters} L`
-                    },
-                    {
-                      label: 'Montant',
-                      value: `${vehicle.totalAmount} FCFA`
-                    },
-                    {
-                      label: 'Livraisons',
-                      value: vehicle.deliveries
-                    }
-                  ]}
-                />
-              ))}
-
-            {vehicles.length > visibleVehicles && (
-              <button
-                className="btn-secondary"
-                onClick={() => setVisibleVehicles(visibleVehicles + 10)}
-              >
-                Voir plus
-              </button>
-            )}
-
-            {vehicles.length === 0 && (
-              <EntityCard
-                title="Aucune donnée véhicule"
-                subtitle="Clôture mensuelle"
-                badge="VIDE"
-                badgeTone="blue"
-                items={[
-                  {
-                    label: 'Mois',
-                    value: month
-                  }
-                ]}
-              />
-            )}
+          <div style={{ marginTop: 14, maxWidth: 320 }}>
+            <input
+              type="month"
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
+              className="form-input"
+            />
           </div>
         </div>
 
-        <div className="panel">
-          <h3 className="panel-title">Consommation par division</h3>
+        <section className="dashboard-grid">
+          <StatCard
+            title="Mois"
+            value={month}
+            subtitle="Période analysée"
+            icon={<CalendarDays size={21} />}
+            tone="blue"
+          />
 
-          <p className="panel-subtitle">
-            Répartition mensuelle par service.
-          </p>
+          <StatCard
+            title="Livraisons"
+            value={summary.totalDeliveries}
+            subtitle="Opérations confirmées"
+            icon={<FileText size={21} />}
+            tone="blue"
+          />
 
-          <div style={{ display: 'grid', gap: 14 }}>
-            {divisions
-              .slice(0, visibleDivisions)
-              .map((division) => (
+          <StatCard
+            title="Litres"
+            value={summary.totalLiters}
+            subtitle="Volume total"
+            icon={<Fuel size={21} />}
+            tone="green"
+          />
+
+          <StatCard
+            title="Montant"
+            value={`${summary.totalAmount} FCFA`}
+            subtitle="Coût mensuel"
+            icon={<Wallet size={21} />}
+            tone="amber"
+          />
+        </section>
+
+        <div className="panel-grid">
+          <div className="panel">
+            <h3 className="panel-title">Consommation par véhicule</h3>
+            <p className="panel-subtitle">
+              Classement mensuel de la flotte.
+            </p>
+
+            <div style={{ display: 'grid', gap: 14 }}>
+              {vehicles
+                .slice(0, visibleVehicles)
+                .map((vehicle) => (
+                  <EntityCard
+                    key={vehicle.id}
+                    title={vehicle.plateNumber}
+                    subtitle={vehicle.label || 'Véhicule'}
+                    badge="FLOTTE"
+                    badgeTone="blue"
+                    items={[
+                      {
+                        label: 'Litres',
+                        value: `${vehicle.totalLiters} L`
+                      },
+                      {
+                        label: 'Montant',
+                        value: `${vehicle.totalAmount} FCFA`
+                      },
+                      {
+                        label: 'Livraisons',
+                        value: vehicle.deliveries
+                      }
+                    ]}
+                  />
+                ))}
+
+              {vehicles.length > visibleVehicles && (
+                <button
+                  className="btn-secondary"
+                  onClick={() => setVisibleVehicles(visibleVehicles + 10)}
+                >
+                  Voir plus
+                </button>
+              )}
+
+              {vehicles.length === 0 && (
                 <EntityCard
-                  key={division.id}
-                  title={division.name}
-                  subtitle={`Code : ${division.code}`}
-                  badge="SERVICE"
-                  badgeTone="green"
+                  title="Aucune donnée véhicule"
+                  subtitle="Clôture mensuelle"
+                  badge="VIDE"
+                  badgeTone="blue"
                   items={[
                     {
-                      label: 'Litres',
-                      value: `${division.totalLiters} L`
-                    },
-                    {
-                      label: 'Montant',
-                      value: `${division.totalAmount} FCFA`
-                    },
-                    {
-                      label: 'Livraisons',
-                      value: division.deliveries
+                      label: 'Mois',
+                      value: month
                     }
                   ]}
                 />
-              ))}
+              )}
+            </div>
+          </div>
 
-            {divisions.length > visibleDivisions && (
-              <button
-                className="btn-secondary"
-                onClick={() => setVisibleDivisions(visibleDivisions + 10)}
-              >
-                Voir plus
-              </button>
-            )}
+          <div className="panel">
+            <h3 className="panel-title">Consommation par division</h3>
+            <p className="panel-subtitle">
+              Répartition mensuelle par service.
+            </p>
 
-            {divisions.length === 0 && (
-              <EntityCard
-                title="Aucune donnée division"
-                subtitle="Clôture mensuelle"
-                badge="VIDE"
-                badgeTone="green"
-                items={[
-                  {
-                    label: 'Mois',
-                    value: month
-                  }
-                ]}
-              />
-            )}
+            <div style={{ display: 'grid', gap: 14 }}>
+              {divisions
+                .slice(0, visibleDivisions)
+                .map((division) => (
+                  <EntityCard
+                    key={division.id}
+                    title={division.name}
+                    subtitle={`Code : ${division.code}`}
+                    badge="SERVICE"
+                    badgeTone="green"
+                    items={[
+                      {
+                        label: 'Litres',
+                        value: `${division.totalLiters} L`
+                      },
+                      {
+                        label: 'Montant',
+                        value: `${division.totalAmount} FCFA`
+                      },
+                      {
+                        label: 'Livraisons',
+                        value: division.deliveries
+                      }
+                    ]}
+                  />
+                ))}
+
+              {divisions.length > visibleDivisions && (
+                <button
+                  className="btn-secondary"
+                  onClick={() => setVisibleDivisions(visibleDivisions + 10)}
+                >
+                  Voir plus
+                </button>
+              )}
+
+              {divisions.length === 0 && (
+                <EntityCard
+                  title="Aucune donnée division"
+                  subtitle="Clôture mensuelle"
+                  badge="VIDE"
+                  badgeTone="green"
+                  items={[
+                    {
+                      label: 'Mois',
+                      value: month
+                    }
+                  ]}
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>
