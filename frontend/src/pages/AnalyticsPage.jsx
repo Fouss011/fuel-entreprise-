@@ -15,12 +15,15 @@ export default function AnalyticsPage() {
   const [topVehicles, setTopVehicles] = useState([])
   const [anomalies, setAnomalies] = useState([])
 
-  async function loadAnalytics() {
-  const data = await getAnalytics()
+  const [visibleVehicles, setVisibleVehicles] = useState(10)
+  const [visibleAnomalies, setVisibleAnomalies] = useState(10)
 
-  setTopVehicles(data.topVehicles || [])
-  setAnomalies(data.anomalies || [])
-}
+  async function loadAnalytics() {
+    const data = await getAnalytics()
+
+    setTopVehicles(data.topVehicles || [])
+    setAnomalies(data.anomalies || [])
+  }
 
   useEffect(() => {
     loadAnalytics()
@@ -65,35 +68,41 @@ export default function AnalyticsPage() {
             Classement consommation.
           </p>
 
-          <div
-            style={{
-              display: 'grid',
-              gap: 14
-            }}
-          >
-            {topVehicles.map((vehicle) => (
-              <EntityCard
-                key={vehicle.vehicleId}
-                title={vehicle.plateNumber}
-                subtitle={vehicle.label || 'Véhicule'}
-                badge="SUIVI"
-                badgeTone="blue"
-                items={[
-                  {
-                    label: 'Litres',
-                    value: `${vehicle.totalLiters} L`
-                  },
-                  {
-                    label: 'Montant',
-                    value: `${vehicle.totalAmount} FCFA`
-                  },
-                  {
-                    label: 'Livraisons',
-                    value: vehicle.totalDeliveries
-                  }
-                ]}
-              />
-            ))}
+          <div style={{ display: 'grid', gap: 14 }}>
+            {topVehicles
+              .slice(0, visibleVehicles)
+              .map((vehicle) => (
+                <EntityCard
+                  key={vehicle.vehicleId}
+                  title={vehicle.plateNumber}
+                  subtitle={vehicle.label || 'Véhicule'}
+                  badge="SUIVI"
+                  badgeTone="blue"
+                  items={[
+                    {
+                      label: 'Litres',
+                      value: `${vehicle.totalLiters} L`
+                    },
+                    {
+                      label: 'Montant',
+                      value: `${vehicle.totalAmount} FCFA`
+                    },
+                    {
+                      label: 'Livraisons',
+                      value: vehicle.totalDeliveries
+                    }
+                  ]}
+                />
+              ))}
+
+            {topVehicles.length > visibleVehicles && (
+              <button
+                className="btn-secondary"
+                onClick={() => setVisibleVehicles(visibleVehicles + 10)}
+              >
+                Voir plus
+              </button>
+            )}
 
             {topVehicles.length === 0 && (
               <EntityCard
@@ -132,12 +141,7 @@ export default function AnalyticsPage() {
             Bons ou opérations suspectes.
           </p>
 
-          <div
-            style={{
-              display: 'grid',
-              gap: 14
-            }}
-          >
+          <div style={{ display: 'grid', gap: 14 }}>
             {anomalies.length === 0 && (
               <EntityCard
                 title="Aucune anomalie détectée"
@@ -157,33 +161,44 @@ export default function AnalyticsPage() {
               />
             )}
 
-            {anomalies.map((anomaly, index) => (
-              <EntityCard
-                key={index}
-                title={anomaly.type}
-                subtitle={`Bon : ${anomaly.voucherNumber || '-'}`}
-                badge="ALERTE"
-                badgeTone="danger"
-                items={[
-                  {
-                    label: 'Véhicule',
-                    value: anomaly.plateNumber || '-'
-                  },
-                  {
-                    label: 'Approuvé',
-                    value: anomaly.approved
-                      ? `${anomaly.approved} L`
-                      : '-'
-                  },
-                  {
-                    label: 'Livré',
-                    value: anomaly.delivered
-                      ? `${anomaly.delivered} L`
-                      : '-'
-                  }
-                ]}
-              />
-            ))}
+            {anomalies
+              .slice(0, visibleAnomalies)
+              .map((anomaly, index) => (
+                <EntityCard
+                  key={index}
+                  title={anomaly.type}
+                  subtitle={`Bon : ${anomaly.voucherNumber || '-'}`}
+                  badge="ALERTE"
+                  badgeTone="danger"
+                  items={[
+                    {
+                      label: 'Véhicule',
+                      value: anomaly.plateNumber || '-'
+                    },
+                    {
+                      label: 'Approuvé',
+                      value: anomaly.approved
+                        ? `${anomaly.approved} L`
+                        : '-'
+                    },
+                    {
+                      label: 'Livré',
+                      value: anomaly.delivered
+                        ? `${anomaly.delivered} L`
+                        : '-'
+                    }
+                  ]}
+                />
+              ))}
+
+            {anomalies.length > visibleAnomalies && (
+              <button
+                className="btn-secondary"
+                onClick={() => setVisibleAnomalies(visibleAnomalies + 10)}
+              >
+                Voir plus
+              </button>
+            )}
           </div>
         </div>
       </div>

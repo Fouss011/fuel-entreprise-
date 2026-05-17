@@ -29,6 +29,9 @@ export default function MonthlyClosingPage() {
   const [vehicles, setVehicles] = useState([])
   const [divisions, setDivisions] = useState([])
 
+  const [visibleVehicles, setVisibleVehicles] = useState(10)
+  const [visibleDivisions, setVisibleDivisions] = useState(10)
+
   async function loadData(selectedMonth = month) {
     const data = await getMonthlyClosing(selectedMonth)
 
@@ -42,6 +45,9 @@ export default function MonthlyClosingPage() {
 
     setVehicles(data.byVehicle || [])
     setDivisions(data.byDivision || [])
+
+    setVisibleVehicles(10)
+    setVisibleDivisions(10)
   }
 
   useEffect(() => {
@@ -118,29 +124,40 @@ export default function MonthlyClosingPage() {
           </p>
 
           <div style={{ display: 'grid', gap: 14 }}>
-            {vehicles.map((vehicle) => (
-              <EntityCard
-                key={vehicle.id}
-                title={vehicle.plateNumber}
-                subtitle={vehicle.label || 'Véhicule'}
-                badge="FLOTTE"
-                badgeTone="blue"
-                items={[
-                  {
-                    label: 'Litres',
-                    value: `${vehicle.totalLiters} L`
-                  },
-                  {
-                    label: 'Montant',
-                    value: `${vehicle.totalAmount} FCFA`
-                  },
-                  {
-                    label: 'Livraisons',
-                    value: vehicle.deliveries
-                  }
-                ]}
-              />
-            ))}
+            {vehicles
+              .slice(0, visibleVehicles)
+              .map((vehicle) => (
+                <EntityCard
+                  key={vehicle.id}
+                  title={vehicle.plateNumber}
+                  subtitle={vehicle.label || 'Véhicule'}
+                  badge="FLOTTE"
+                  badgeTone="blue"
+                  items={[
+                    {
+                      label: 'Litres',
+                      value: `${vehicle.totalLiters} L`
+                    },
+                    {
+                      label: 'Montant',
+                      value: `${vehicle.totalAmount} FCFA`
+                    },
+                    {
+                      label: 'Livraisons',
+                      value: vehicle.deliveries
+                    }
+                  ]}
+                />
+              ))}
+
+            {vehicles.length > visibleVehicles && (
+              <button
+                className="btn-secondary"
+                onClick={() => setVisibleVehicles(visibleVehicles + 10)}
+              >
+                Voir plus
+              </button>
+            )}
 
             {vehicles.length === 0 && (
               <EntityCard
@@ -167,29 +184,40 @@ export default function MonthlyClosingPage() {
           </p>
 
           <div style={{ display: 'grid', gap: 14 }}>
-            {divisions.map((division) => (
-              <EntityCard
-                key={division.id}
-                title={division.name}
-                subtitle={`Code : ${division.code}`}
-                badge="SERVICE"
-                badgeTone="green"
-                items={[
-                  {
-                    label: 'Litres',
-                    value: `${division.totalLiters} L`
-                  },
-                  {
-                    label: 'Montant',
-                    value: `${division.totalAmount} FCFA`
-                  },
-                  {
-                    label: 'Livraisons',
-                    value: division.deliveries
-                  }
-                ]}
-              />
-            ))}
+            {divisions
+              .slice(0, visibleDivisions)
+              .map((division) => (
+                <EntityCard
+                  key={division.id}
+                  title={division.name}
+                  subtitle={`Code : ${division.code}`}
+                  badge="SERVICE"
+                  badgeTone="green"
+                  items={[
+                    {
+                      label: 'Litres',
+                      value: `${division.totalLiters} L`
+                    },
+                    {
+                      label: 'Montant',
+                      value: `${division.totalAmount} FCFA`
+                    },
+                    {
+                      label: 'Livraisons',
+                      value: division.deliveries
+                    }
+                  ]}
+                />
+              ))}
+
+            {divisions.length > visibleDivisions && (
+              <button
+                className="btn-secondary"
+                onClick={() => setVisibleDivisions(visibleDivisions + 10)}
+              >
+                Voir plus
+              </button>
+            )}
 
             {divisions.length === 0 && (
               <EntityCard
