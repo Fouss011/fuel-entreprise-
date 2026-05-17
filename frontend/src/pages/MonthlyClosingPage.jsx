@@ -7,8 +7,8 @@ import {
   Fuel,
   Wallet
 } from 'lucide-react'
-import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 import MainLayout from '../layouts/MainLayout'
 import StatCard from '../components/StatCard'
@@ -17,7 +17,7 @@ import EntityCard from '../components/EntityCard'
 import { getMonthlyClosing } from '../api/api'
 
 export default function MonthlyClosingPage() {
-  const exportRef = useRef(null)
+  
 
   const [month, setMonth] = useState(
     new Date().toISOString().slice(0, 7)
@@ -54,40 +54,58 @@ export default function MonthlyClosingPage() {
     setVisibleDivisions(10)
   }
 
-  async function exportPDF() {
-    if (!exportRef.current) return
+  function exportPDF() {
+  const doc = new jsPDF()
 
-    setExporting(true)
+  doc.setFontSize(18)
+  doc.text('Clôture mensuelle carburant', 14, 18)
 
-    const canvas = await html2canvas(exportRef.current, {
-      scale: 2,
-      backgroundColor: '#f3f6fb'
-    })
+  doc.setFontSize(10)
+  doc.text(`Période : ${month}`, 14, 28)
 
-    const imgData = canvas.toDataURL('image/png')
-    const pdf = new jsPDF('p', 'mm', 'a4')
+  doc.setFontSize(12)
+  doc.text(`Nombre de livraisons : ${summary.totalDeliveries}`, 14, 42)
+  doc.text(`Litres servis : ${summary.totalLiters} L`, 14, 49)
+  doc.text(`Montant total : ${summary.totalAmount} FCFA`, 14, 56)
 
-    const pdfWidth = pdf.internal.pageSize.getWidth()
-    const pdfHeight = pdf.internal.pageSize.getHeight()
-    const imgWidth = pdfWidth
-    const imgHeight = (canvas.height * imgWidth) / canvas.width
+  autoTable(doc, {
+    startY: 68,
+    head: [[
+      'Véhicule',
+      'Libellé',
+      'Litres',
+      'Montant',
+      'Livraisons'
+    ]],
+    body: vehicles.map((vehicle) => [
+      vehicle.plateNumber || '-',
+      vehicle.label || '-',
+      `${vehicle.totalLiters || 0} L`,
+      `${vehicle.totalAmount || 0} FCFA`,
+      vehicle.deliveries || 0
+    ])
+  })
 
-    let heightLeft = imgHeight
-    let position = 0
+  autoTable(doc, {
+    startY: doc.lastAutoTable.finalY + 12,
+    head: [[
+      'Division',
+      'Code',
+      'Litres',
+      'Montant',
+      'Livraisons'
+    ]],
+    body: divisions.map((division) => [
+      division.name || '-',
+      division.code || '-',
+      `${division.totalLiters || 0} L`,
+      `${division.totalAmount || 0} FCFA`,
+      division.deliveries || 0
+    ])
+  })
 
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-    heightLeft -= pdfHeight
-
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight
-      pdf.addPage()
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-      heightLeft -= pdfHeight
-    }
-
-    pdf.save(`cloture-mensuelle-${month}.pdf`)
-    setExporting(false)
-  }
+  doc.save(`cloture-mensuelle-${month}.pdf`)
+}
 
   useEffect(() => {
     loadData(month)
@@ -105,7 +123,7 @@ export default function MonthlyClosingPage() {
         </div>
 
         <div className="header-actions">
-          <button className="btn-secondary" onClick={exportPDF} disabled={exporting}>
+          <button className="btn-primary" onClick={exportPDF} disabled={exporting}>
             <Download size={16} />
             {exporting ? 'Export...' : 'Exporter PDF'}
           </button>

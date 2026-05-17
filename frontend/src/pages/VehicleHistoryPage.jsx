@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Download, FileText, Fuel, Wallet } from 'lucide-react'
-import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 import MainLayout from '../layouts/MainLayout'
 import StatCard from '../components/StatCard'
@@ -34,40 +34,56 @@ export default function VehicleHistoryPage() {
     setDeliveries(historyData.deliveries || [])
   }
 
-  async function exportPDF() {
-    if (!exportRef.current) return
+  function exportPDF() {
+  const doc = new jsPDF()
 
-    setExporting(true)
+  doc.setFontSize(18)
+  doc.text('Historique véhicule', 14, 18)
 
-    const canvas = await html2canvas(exportRef.current, {
-      scale: 2,
-      backgroundColor: '#f3f6fb'
-    })
+  doc.setFontSize(10)
+  doc.text(`Période : ${month || 'Toutes périodes'}`, 14, 28)
 
-    const imgData = canvas.toDataURL('image/png')
-    const pdf = new jsPDF('p', 'mm', 'a4')
+  const selectedVehicle = vehicles.find((item) => item.id === vehicleId)
 
-    const pdfWidth = pdf.internal.pageSize.getWidth()
-    const pdfHeight = pdf.internal.pageSize.getHeight()
-    const imgWidth = pdfWidth
-    const imgHeight = (canvas.height * imgWidth) / canvas.width
+  doc.text(
+    `Véhicule : ${selectedVehicle?.plate_number || 'Non sélectionné'}`,
+    14,
+    34
+  )
 
-    let heightLeft = imgHeight
-    let position = 0
+  doc.setFontSize(12)
+  doc.text(`Nombre de livraisons : ${stats.totalDeliveries}`, 14, 46)
+  doc.text(`Litres servis : ${stats.totalLiters} L`, 14, 53)
+  doc.text(`Montant total : ${stats.totalAmount} FCFA`, 14, 60)
 
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-    heightLeft -= pdfHeight
+  autoTable(doc, {
+    startY: 70,
+    head: [[
+      'Bon',
+      'Plaque',
+      'Division',
+      'Demandé',
+      'Approuvé',
+      'Servi',
+      'Pompiste',
+      'Date'
+    ]],
+    body: filteredDeliveries.map((item) => [
+      item.voucher?.voucher_number || '-',
+      item.voucher?.vehicle?.plate_number || '-',
+      item.voucher?.division?.name || '-',
+      `${item.voucher?.requested_liters || 0} L`,
+      `${item.voucher?.approved_liters || 0} L`,
+      `${item.delivered_liters || 0} L`,
+      item.pompiste?.full_name || '-',
+      item.delivered_at
+        ? new Date(item.delivered_at).toLocaleDateString('fr-FR')
+        : '-'
+    ])
+  })
 
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight
-      pdf.addPage()
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-      heightLeft -= pdfHeight
-    }
-
-    pdf.save(`historique-vehicule-${month || 'toutes-periodes'}.pdf`)
-    setExporting(false)
-  }
+  doc.save(`historique-vehicule-${month || 'global'}.pdf`)
+}
 
   useEffect(() => {
     loadVehicles()
