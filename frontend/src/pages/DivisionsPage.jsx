@@ -5,6 +5,7 @@ import EntityCard from '../components/EntityCard'
 
 export default function DivisionsPage() {
   const [divisions, setDivisions] = useState([])
+  const [search, setSearch] = useState('')
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
   const [managerName, setManagerName] = useState('')
@@ -57,6 +58,16 @@ export default function DivisionsPage() {
     await loadDivisions()
   }
 
+  const filteredDivisions = divisions.filter((division) => {
+  const text = search.toLowerCase()
+
+  return (
+    division.name?.toLowerCase().includes(text) ||
+    division.code?.toLowerCase().includes(text) ||
+    division.manager_name?.toLowerCase().includes(text)
+  )
+})
+
   return (
     <MainLayout>
       <div className="page-header">
@@ -78,10 +89,20 @@ export default function DivisionsPage() {
       <div className="panel-grid">
         <div className="panel">
           <h3 className="panel-title">Liste des divisions</h3>
+          <input
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+  placeholder="Rechercher division, code, responsable..."
+  className="form-input"
+  style={{
+    marginTop: 14,
+    marginBottom: 16
+  }}
+/>
           <p className="panel-subtitle">Toutes les entités enregistrées.</p>
 
           <div style={{ display: 'grid', gap: 12 }}>
-            {divisions.map((division) => (
+            {filteredDivisions.map((division) => (
   <EntityCard
     key={division.id}
     title={division.name}
@@ -102,7 +123,7 @@ export default function DivisionsPage() {
   />
 ))}
 
-            {divisions.length === 0 && (
+            {filteredDivisions.length === 0 && (
               <p style={{ color: '#94a3b8' }}>Aucune division enregistrée.</p>
             )}
           </div>

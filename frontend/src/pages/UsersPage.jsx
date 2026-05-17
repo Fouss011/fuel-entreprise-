@@ -27,6 +27,7 @@ export default function UsersPage() {
   const isSuperAdmin = currentUser.role === 'super_admin'
 
   const [users, setUsers] = useState([])
+  const [search, setSearch] = useState('')
   const [divisions, setDivisions] = useState([])
   const [structures, setStructures] = useState([])
 
@@ -139,6 +140,18 @@ export default function UsersPage() {
 
   const availableRoles = isSuperAdmin ? superAdminRoles : roles
 
+  const filteredUsers = users.filter((user) => {
+  const text = search.toLowerCase()
+
+  return (
+    user.full_name?.toLowerCase().includes(text) ||
+    user.email?.toLowerCase().includes(text) ||
+    user.phone?.toLowerCase().includes(text) ||
+    user.role?.toLowerCase().includes(text) ||
+    user.division?.name?.toLowerCase().includes(text)
+  )
+})
+
   return (
     <MainLayout>
       <div className="page-header">
@@ -154,10 +167,20 @@ export default function UsersPage() {
       <div className="panel-grid">
         <div className="panel">
           <h3 className="panel-title">Liste des utilisateurs</h3>
+          <input
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+  placeholder="Rechercher utilisateur, email, téléphone..."
+  className="form-input"
+  style={{
+    marginTop: 14,
+    marginBottom: 16
+  }}
+/>
           <p className="panel-subtitle">Comptes actifs de la plateforme.</p>
 
           <div style={{ display: 'grid', gap: 12 }}>
-            {users.map((user) => (
+            {filteredUsers.map((user) => (
               <EntityCard
                 key={user.id}
                 title={user.full_name}
@@ -186,7 +209,7 @@ export default function UsersPage() {
               />
             ))}
 
-            {users.length === 0 && (
+            {filteredUsers.length === 0 && (
               <p style={{ color: '#94a3b8' }}>Aucun utilisateur enregistré.</p>
             )}
           </div>
