@@ -15,6 +15,7 @@ import {
 
 export default function VouchersPage() {
   const [vouchers, setVouchers] = useState([])
+  const [search, setSearch] = useState('')
   const [divisions, setDivisions] = useState([])
   const [vehicles, setVehicles] = useState([])
   const [users, setUsers] = useState([])
@@ -107,6 +108,18 @@ export default function VouchersPage() {
   await loadData()
 }
 
+const filteredVouchers = vouchers.filter((voucher) => {
+  const text = search.toLowerCase()
+
+  return (
+    voucher.voucher_number?.toLowerCase().includes(text) ||
+    voucher.vehicle?.plate_number?.toLowerCase().includes(text) ||
+    voucher.driver?.full_name?.toLowerCase().includes(text) ||
+    voucher.division?.name?.toLowerCase().includes(text) ||
+    voucher.status?.toLowerCase().includes(text)
+  )
+})
+
   return (
     <MainLayout>
       <div className="page-header">
@@ -122,10 +135,20 @@ export default function VouchersPage() {
       <div className="panel-grid">
         <div className="panel">
           <h3 className="panel-title">Liste des bons</h3>
+          <input
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+  placeholder="Rechercher bon, véhicule, chauffeur, division..."
+  className="form-input"
+  style={{
+    marginTop: 14,
+    marginBottom: 16
+  }}
+/>
           <p className="panel-subtitle">Historique des demandes et validations.</p>
 
           <div style={{ display: 'grid', gap: 12 }}>
-            {vouchers.map((voucher) => (
+            {filteredVouchers.map((voucher) => (
   <div
   key={voucher.id}
   style={{
@@ -201,7 +224,7 @@ export default function VouchersPage() {
   </div>
 ))}
 
-            {vouchers.length === 0 && (
+            {filteredVouchers.length === 0 && (
               <p style={{ color: '#94a3b8' }}>Aucun bon enregistré.</p>
             )}
           </div>

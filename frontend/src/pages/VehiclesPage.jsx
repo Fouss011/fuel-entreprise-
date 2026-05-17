@@ -10,6 +10,7 @@ import {
 
 export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState([])
+  const [search, setSearch] = useState('')
   const [divisions, setDivisions] = useState([])
 
   const [plateNumber, setPlateNumber] = useState('')
@@ -79,6 +80,16 @@ export default function VehiclesPage() {
   await loadData()
 }
 
+const filteredVehicles = vehicles.filter((vehicle) => {
+  const text = search.toLowerCase()
+
+  return (
+    vehicle.plate_number?.toLowerCase().includes(text) ||
+    vehicle.label?.toLowerCase().includes(text) ||
+    vehicle.brand?.toLowerCase().includes(text)
+  )
+})
+
   return (
     <MainLayout>
       <div className="page-header">
@@ -94,10 +105,20 @@ export default function VehiclesPage() {
       <div className="panel-grid">
         <div className="panel">
           <h3 className="panel-title">Liste des véhicules</h3>
+          <input
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+  placeholder="Rechercher véhicule, plaque, marque..."
+  className="form-input"
+  style={{
+    marginTop: 14,
+    marginBottom: 16
+  }}
+/>
           <p className="panel-subtitle">Véhicules rattachés aux divisions.</p>
 
           <div style={{ display: 'grid', gap: 12 }}>
-  {vehicles.map((vehicle) => (
+  {filteredVehicles.map((vehicle) => (
     <EntityCard
       key={vehicle.id}
       title={vehicle.plate_number}
@@ -122,7 +143,7 @@ export default function VehiclesPage() {
     />
   ))}
 
-  {vehicles.length === 0 && (
+  {filteredVehicles.length === 0 && (
     <p style={{ color: '#94a3b8' }}>Aucun véhicule enregistré.</p>
   )}
 </div>
