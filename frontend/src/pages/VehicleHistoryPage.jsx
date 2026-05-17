@@ -123,7 +123,7 @@ export default function VehicleHistoryPage() {
         </div>
 
         <div className="header-actions">
-          <button className="btn-secondary" onClick={exportPDF} disabled={exporting}>
+          <button className="btn-primary" onClick={exportPDF} disabled={exporting}>
             <Download size={16} />
             {exporting ? 'Export...' : 'Exporter PDF'}
           </button>
