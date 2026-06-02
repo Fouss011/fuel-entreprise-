@@ -5,11 +5,13 @@ import {
   createVehicle,
   deleteVehicle,
   getDivisions,
-  getVehicles
+  getVehicles,
+  updateVehicle
 } from '../api/api'
 
 const vehicleTypes = [
   { value: 'all', label: 'Tous' },
+  { value: 'unclassified', label: 'Non classés' },
   { value: 'pick-up', label: 'Pick-up' },
   { value: 'camion', label: 'Camions' },
   { value: 'bus', label: 'Bus' },
@@ -30,6 +32,7 @@ export default function VehiclesPage() {
   const [fuelType, setFuelType] = useState('diesel')
   const [divisionId, setDivisionId] = useState('')
 
+  const [editingVehicleId, setEditingVehicleId] = useState(null)
   const [activeTypeTab, setActiveTypeTab] = useState('all')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -53,18 +56,42 @@ export default function VehiclesPage() {
     loadData()
   }, [])
 
+  function resetForm() {
+    setPlateNumber('')
+    setLabel('')
+    setVehicleType('pick-up')
+    setFuelType('diesel')
+    setDivisionId('')
+    setEditingVehicleId(null)
+    setError('')
+  }
+
+  function handleEdit(vehicle) {
+    setEditingVehicleId(vehicle.id)
+    setPlateNumber(vehicle.plate_number || '')
+    setLabel(vehicle.label || '')
+    setVehicleType(vehicle.vehicle_type || 'pick-up')
+    setFuelType(vehicle.fuel_type || 'diesel')
+    setDivisionId(vehicle.division_id || '')
+    setError('')
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     setLoading(true)
     setError('')
 
-    const data = await createVehicle({
+    const payload = {
       plateNumber,
       label,
       vehicleType,
       fuelType,
-      divisionId
-    })
+      divisionId: divisionId || null
+    }
+
+    const data = editingVehicleId
+      ? await updateVehicle(editingVehicleId, payload)
+      : await createVehicle(payload)
 
     if (data.error) {
       setError(data.error)
@@ -72,10 +99,7 @@ export default function VehiclesPage() {
       return
     }
 
-    setPlateNumber('')
-    setLabel('')
-    setVehicleType('pick-up')
-    setFuelType('diesel')
+    resetForm()
     await loadData()
     setLoading(false)
   }
@@ -90,11 +114,16 @@ export default function VehiclesPage() {
       return
     }
 
+    if (editingVehicleId === id) {
+      resetForm()
+    }
+
     await loadData()
   }
 
   const filteredVehicles = vehicles.filter((vehicle) => {
     const text = search.toLowerCase()
+    const currentType = vehicle.vehicle_type?.toLowerCase()
 
     const matchesSearch =
       vehicle.plate_number?.toLowerCase().includes(text) ||
@@ -104,7 +133,8 @@ export default function VehiclesPage() {
 
     const matchesType =
       activeTypeTab === 'all' ||
-      vehicle.vehicle_type?.toLowerCase() === activeTypeTab
+      (activeTypeTab === 'unclassified' && !currentType) ||
+      currentType === activeTypeTab
 
     return matchesSearch && matchesType
   })
@@ -116,7 +146,7 @@ export default function VehiclesPage() {
           <p className="page-eyebrow">Flotte</p>
           <h1 className="page-title">Véhicules</h1>
           <p className="page-subtitle">
-            Enregistre les véhicules de fonction, camions, engins ou pick-up suivis par la plateforme.
+            Enregistre, classe et corrige les véhicules suivis par la plateforme.
           </p>
         </div>
       </div>
@@ -167,7 +197,11 @@ export default function VehiclesPage() {
             ))}
           </div>
 
-          <p className="panel-subtitle">Véhicules rattachés aux divisions.</p>
+          <p className="panel-subtitle">
+            {activeTypeTab === 'unclassified'
+              ? 'Véhicules sans type à corriger.'
+              : 'Véhicules rattachés aux divisions.'}
+          </p>
 
           <div style={{ display: 'grid', gap: 12 }}>
             {filteredVehicles
@@ -183,7 +217,7 @@ export default function VehiclesPage() {
                   items={[
                     {
                       label: 'Type',
-                      value: vehicle.vehicle_type || '-'
+                      value: vehicle.vehicle_type || 'Non classé'
                     },
                     {
                       label: 'Carburant',
@@ -192,6 +226,22 @@ export default function VehiclesPage() {
                     {
                       label: 'Division',
                       value: vehicle.division?.name || '-'
+                    },
+                    {
+                      label: 'Action',
+                      value: (
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          onClick={() => handleEdit(vehicle)}
+                          style={{
+                            padding: '7px 10px',
+                            fontSize: 12
+                          }}
+                        >
+                          Modifier
+                        </button>
+                      )
                     }
                   ]}
                 />
@@ -213,8 +263,15 @@ export default function VehiclesPage() {
         </div>
 
         <div className="panel">
-          <h3 className="panel-title">Ajouter un véhicule</h3>
-          <p className="panel-subtitle">Exemple : TG-1234-A, Pick-up Direction Mines.</p>
+          <h3 className="panel-title">
+            {editingVehicleId ? 'Modifier le véhicule' : 'Ajouter un véhicule'}
+          </h3>
+
+          <p className="panel-subtitle">
+            {editingVehicleId
+              ? 'Corrige les informations du véhicule sans refaire la saisie.'
+              : 'Exemple : TG-1234-A, Pick-up Direction Mines.'}
+          </p>
 
           <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 14 }}>
             <input
@@ -259,6 +316,7 @@ export default function VehiclesPage() {
               onChange={(e) => setDivisionId(e.target.value)}
               className="form-input"
             >
+              <option value="">Aucune division</option>
               {divisions.map((division) => (
                 <option key={division.id} value={division.id}>
                   {division.name}
@@ -269,8 +327,24 @@ export default function VehiclesPage() {
             {error && <p style={{ color: '#fca5a5' }}>{error}</p>}
 
             <button className="btn-primary" disabled={loading}>
-              {loading ? 'Ajout...' : 'Ajouter le véhicule'}
+              {loading
+                ? editingVehicleId
+                  ? 'Modification...'
+                  : 'Ajout...'
+                : editingVehicleId
+                  ? 'Mettre à jour le véhicule'
+                  : 'Ajouter le véhicule'}
             </button>
+
+            {editingVehicleId && (
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={resetForm}
+              >
+                Annuler la modification
+              </button>
+            )}
           </form>
         </div>
       </div>

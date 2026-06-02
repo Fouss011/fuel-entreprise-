@@ -74,6 +74,52 @@ export async function createVehicle(req, res) {
   }
 }
 
+export async function updateVehicle(req, res) {
+  try {
+    const { id } = req.params
+
+    const {
+      plateNumber,
+      label,
+      vehicleType,
+      fuelType,
+      divisionId
+    } = req.body
+
+    if (!plateNumber) {
+      return res.status(400).json({ error: 'Immatriculation requise' })
+    }
+
+    let query = supabase
+      .from('vehicles')
+      .update({
+        plate_number: plateNumber.toUpperCase().trim(),
+        label: label || null,
+        vehicle_type: vehicleType || null,
+        fuel_type: fuelType || 'diesel',
+        division_id: divisionId || null
+      })
+      .eq('id', id)
+      .select(`
+        *,
+        division:divisions(id, name, code),
+        structure:structures(id, name, code)
+      `)
+      .single()
+
+    query = applyStructureScope(query, req)
+
+    const { data, error } = await query
+
+    if (error) return res.status(400).json({ error: error.message })
+
+    return res.json({ vehicle: data })
+  } catch (error) {
+    console.error('UPDATE_VEHICLE_ERROR =>', error)
+    return res.status(500).json({ error: 'Erreur modification véhicule' })
+  }
+}
+
 export async function deleteVehicle(req, res) {
   try {
     const { id } = req.params

@@ -3,6 +3,7 @@ import express from 'express'
 import {
   getVehicles,
   createVehicle,
+  updateVehicle,
   deleteVehicle
 } from '../controllers/vehicles.controller.js'
 
@@ -18,6 +19,13 @@ router.post(
   authMiddleware,
   requireRole('super_admin', 'direction'),
   createVehicle
+)
+
+router.patch(
+  '/:id',
+  authMiddleware,
+  requireRole('super_admin', 'direction'),
+  updateVehicle
 )
 
 router.delete(
