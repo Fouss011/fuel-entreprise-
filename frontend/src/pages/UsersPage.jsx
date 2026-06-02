@@ -14,13 +14,31 @@ const roles = [
   { value: 'chef_division', label: 'Chef de division' },
   { value: 'chauffeur', label: 'Chauffeur / bénéficiaire' },
   { value: 'pompiste', label: 'Pompiste' },
-  { value: 'comptabilite', label: 'Comptabilité / Audit' }
+  { value: 'comptabilite', label: 'Comptabilité / Audit' },
+  { value: 'formateur', label: 'Formateur' }
 ]
 
 const superAdminRoles = [
   { value: 'super_admin', label: 'Super admin' },
   ...roles
 ]
+
+const rolesWithLogin = [
+  'super_admin',
+  'direction',
+  'chef_division',
+  'pompiste'
+]
+
+const roleLabels = {
+  super_admin: 'Super admin',
+  direction: 'Direction',
+  chef_division: 'Chefs de division',
+  chauffeur: 'Chauffeurs / bénéficiaires',
+  pompiste: 'Pompistes',
+  comptabilite: 'Comptabilité / Audit',
+  formateur: 'Formateurs'
+}
 
 export default function UsersPage() {
   const currentUser = JSON.parse(localStorage.getItem('fuel_user') || '{}')
@@ -39,9 +57,12 @@ export default function UsersPage() {
   const [divisionId, setDivisionId] = useState('')
   const [structureId, setStructureId] = useState('')
 
+  const [activeRoleTab, setActiveRoleTab] = useState('all')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [visibleCount, setVisibleCount] = useState(10)
+
+  const needsLogin = rolesWithLogin.includes(role)
 
   async function loadData() {
     setError('')
@@ -84,10 +105,31 @@ export default function UsersPage() {
     loadData()
   }, [])
 
+  function handleRoleChange(value) {
+    setRole(value)
+
+    if (!rolesWithLogin.includes(value)) {
+      setEmail('')
+      setPassword('123456')
+    }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     setLoading(true)
     setError('')
+
+    if (!fullName || !role) {
+      setError('Nom complet et rôle obligatoires.')
+      setLoading(false)
+      return
+    }
+
+    if (rolesWithLogin.includes(role) && (!email || !password)) {
+      setError('Email et mot de passe obligatoires pour ce rôle.')
+      setLoading(false)
+      return
+    }
 
     if (isSuperAdmin && role !== 'super_admin' && !structureId) {
       setError('Choisis une structure pour cet utilisateur.')
@@ -96,8 +138,8 @@ export default function UsersPage() {
     }
 
     const payload = {
-      email,
-      password,
+      email: rolesWithLogin.includes(role) ? email : null,
+      password: rolesWithLogin.includes(role) ? password : null,
       fullName,
       phone,
       role,
@@ -122,6 +164,7 @@ export default function UsersPage() {
     setPhone('')
     setRole(isSuperAdmin ? 'direction' : 'chauffeur')
     setDivisionId('')
+    setActiveRoleTab('all')
     await loadData()
     setLoading(false)
   }
@@ -141,17 +184,26 @@ export default function UsersPage() {
 
   const availableRoles = isSuperAdmin ? superAdminRoles : roles
 
-  const filteredUsers = users.filter((user) => {
-  const text = search.toLowerCase()
+  const tabs = [
+    { value: 'all', label: 'Tous' },
+    ...availableRoles
+  ]
 
-  return (
-    user.full_name?.toLowerCase().includes(text) ||
-    user.email?.toLowerCase().includes(text) ||
-    user.phone?.toLowerCase().includes(text) ||
-    user.role?.toLowerCase().includes(text) ||
-    user.division?.name?.toLowerCase().includes(text)
-  )
-})
+  const filteredUsers = users.filter((user) => {
+    const text = search.toLowerCase()
+
+    const matchesSearch =
+      user.full_name?.toLowerCase().includes(text) ||
+      user.email?.toLowerCase().includes(text) ||
+      user.phone?.toLowerCase().includes(text) ||
+      user.role?.toLowerCase().includes(text) ||
+      user.division?.name?.toLowerCase().includes(text)
+
+    const matchesRole =
+      activeRoleTab === 'all' || user.role === activeRoleTab
+
+    return matchesSearch && matchesRole
+  })
 
   return (
     <MainLayout>
@@ -160,7 +212,7 @@ export default function UsersPage() {
           <p className="page-eyebrow">Sécurité & accès</p>
           <h1 className="page-title">Utilisateurs</h1>
           <p className="page-subtitle">
-            Crée les comptes des responsables, chauffeurs, pompistes et agents de contrôle.
+            Crée les comptes des responsables, chauffeurs, pompistes, formateurs et agents de contrôle.
           </p>
         </div>
       </div>
@@ -168,60 +220,95 @@ export default function UsersPage() {
       <div className="panel-grid">
         <div className="panel">
           <h3 className="panel-title">Liste des utilisateurs</h3>
+
           <input
-  value={search}
-  onChange={(e) => setSearch(e.target.value)}
-  placeholder="Rechercher utilisateur, email, téléphone..."
-  className="form-input"
-  style={{
-    marginTop: 14,
-    marginBottom: 16
-  }}
-/>
-          <p className="panel-subtitle">Comptes actifs de la plateforme.</p>
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Rechercher utilisateur, email, téléphone..."
+            className="form-input"
+            style={{
+              marginTop: 14,
+              marginBottom: 16
+            }}
+          />
+
+          <div
+            style={{
+              display: 'flex',
+              gap: 8,
+              flexWrap: 'wrap',
+              marginBottom: 16
+            }}
+          >
+            {tabs.map((item) => (
+              <button
+                key={item.value}
+                type="button"
+                onClick={() => {
+                  setActiveRoleTab(item.value)
+                  setVisibleCount(10)
+                }}
+                className={
+                  activeRoleTab === item.value
+                    ? 'btn-primary'
+                    : 'btn-secondary'
+                }
+                style={{
+                  padding: '8px 12px',
+                  fontSize: 13
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          <p className="panel-subtitle">
+            {activeRoleTab === 'all'
+              ? 'Tous les comptes actifs de la plateforme.'
+              : roleLabels[activeRoleTab] || 'Comptes actifs de la plateforme.'}
+          </p>
 
           <div style={{ display: 'grid', gap: 12 }}>
             {filteredUsers
-  .slice(0, visibleCount)
-  .map((user) => (
-              <EntityCard
-                key={user.id}
-                title={user.full_name}
-                subtitle={user.email}
-                badge="SUPPRIMER"
-                badgeTone="danger"
-                onAction={() => handleDelete(user.id)}
-                items={[
-                  {
-                    label: 'Rôle',
-                    value: user.role
-                  },
-                  {
-                    label: 'Structure',
-                    value: user.structure?.name || '-'
-                  },
-                  {
-                    label: 'Division',
-                    value: user.division?.name || '-'
-                  },
-                  {
-                    label: 'Statut',
-                    value: user.is_active ? 'Actif' : 'Désactivé'
-                  }
-                ]}
-              />
-            ))}
+              .slice(0, visibleCount)
+              .map((user) => (
+                <EntityCard
+                  key={user.id}
+                  title={user.full_name}
+                  subtitle={user.email || 'Aucun accès de connexion'}
+                  badge="SUPPRIMER"
+                  badgeTone="danger"
+                  onAction={() => handleDelete(user.id)}
+                  items={[
+                    {
+                      label: 'Rôle',
+                      value: roleLabels[user.role] || user.role
+                    },
+                    {
+                      label: 'Structure',
+                      value: user.structure?.name || '-'
+                    },
+                    {
+                      label: 'Division',
+                      value: user.division?.name || '-'
+                    },
+                    {
+                      label: 'Statut',
+                      value: user.is_active ? 'Actif' : 'Désactivé'
+                    }
+                  ]}
+                />
+              ))}
 
             {filteredUsers.length > visibleCount && (
-  <button
-    className="btn-secondary"
-    onClick={() =>
-      setVisibleCount(visibleCount + 10)
-    }
-  >
-    Voir plus
-  </button>
-)}
+              <button
+                className="btn-secondary"
+                onClick={() => setVisibleCount(visibleCount + 10)}
+              >
+                Voir plus
+              </button>
+            )}
 
             {filteredUsers.length === 0 && (
               <p style={{ color: '#94a3b8' }}>Aucun utilisateur enregistré.</p>
@@ -245,30 +332,9 @@ export default function UsersPage() {
               className="form-input"
             />
 
-            <input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
-              className="form-input"
-            />
-
-            <input
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="Téléphone"
-              className="form-input"
-            />
-
-            <input
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Mot de passe temporaire"
-              className="form-input"
-            />
-
             <select
               value={role}
-              onChange={(e) => setRole(e.target.value)}
+              onChange={(e) => handleRoleChange(e.target.value)}
               className="form-input"
             >
               {availableRoles.map((item) => (
@@ -277,6 +343,31 @@ export default function UsersPage() {
                 </option>
               ))}
             </select>
+
+            {needsLogin && (
+              <>
+                <input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email"
+                  className="form-input"
+                />
+
+                <input
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Mot de passe temporaire"
+                  className="form-input"
+                />
+              </>
+            )}
+
+            <input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Téléphone"
+              className="form-input"
+            />
 
             {isSuperAdmin && role !== 'super_admin' && (
               <select

@@ -6,6 +6,13 @@ import {
   isSuperAdmin
 } from '../utils/scope.js'
 
+const rolesWithLogin = [
+  'super_admin',
+  'direction',
+  'chef_division',
+  'pompiste'
+]
+
 export async function getUsers(req, res) {
   try {
     let query = supabase
@@ -50,9 +57,17 @@ export async function createUser(req, res) {
       structureId
     } = req.body
 
-    if (!email || !password || !fullName || !role) {
+    const needsLogin = rolesWithLogin.includes(role)
+
+    if (!fullName || !role) {
       return res.status(400).json({
-        error: 'Email, mot de passe, nom et rôle requis'
+        error: 'Nom et rôle requis'
+      })
+    }
+
+    if (needsLogin && (!email || !password)) {
+      return res.status(400).json({
+        error: 'Email et mot de passe requis pour ce rôle'
       })
     }
 
@@ -72,12 +87,14 @@ export async function createUser(req, res) {
       })
     }
 
-    const passwordHash = await bcrypt.hash(password, 10)
+    const passwordHash = needsLogin
+      ? await bcrypt.hash(password, 10)
+      : null
 
     const { data, error } = await supabase
       .from('users_profile')
       .insert({
-        email: email.toLowerCase().trim(),
+        email: needsLogin ? email.toLowerCase().trim() : null,
         password_hash: passwordHash,
         full_name: fullName,
         phone: phone || null,

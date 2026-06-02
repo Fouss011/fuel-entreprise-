@@ -8,6 +8,17 @@ import {
   getVehicles
 } from '../api/api'
 
+const vehicleTypes = [
+  { value: 'all', label: 'Tous' },
+  { value: 'pick-up', label: 'Pick-up' },
+  { value: 'camion', label: 'Camions' },
+  { value: 'bus', label: 'Bus' },
+  { value: 'engin', label: 'Engins' },
+  { value: 'voiture', label: 'Voitures' },
+  { value: 'moto', label: 'Motos' },
+  { value: 'autre', label: 'Autres' }
+]
+
 export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState([])
   const [search, setSearch] = useState('')
@@ -15,10 +26,11 @@ export default function VehiclesPage() {
 
   const [plateNumber, setPlateNumber] = useState('')
   const [label, setLabel] = useState('')
-  const [vehicleType, setVehicleType] = useState('')
+  const [vehicleType, setVehicleType] = useState('pick-up')
   const [fuelType, setFuelType] = useState('diesel')
   const [divisionId, setDivisionId] = useState('')
 
+  const [activeTypeTab, setActiveTypeTab] = useState('all')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [visibleCount, setVisibleCount] = useState(10)
@@ -62,34 +74,40 @@ export default function VehiclesPage() {
 
     setPlateNumber('')
     setLabel('')
-    setVehicleType('')
+    setVehicleType('pick-up')
     setFuelType('diesel')
     await loadData()
     setLoading(false)
   }
 
   async function handleDelete(id) {
-  if (!window.confirm('Supprimer ce véhicule ?')) return
+    if (!window.confirm('Supprimer ce véhicule ?')) return
 
-  const data = await deleteVehicle(id)
+    const data = await deleteVehicle(id)
 
-  if (data.error) {
-    setError(data.error)
-    return
+    if (data.error) {
+      setError(data.error)
+      return
+    }
+
+    await loadData()
   }
 
-  await loadData()
-}
+  const filteredVehicles = vehicles.filter((vehicle) => {
+    const text = search.toLowerCase()
 
-const filteredVehicles = vehicles.filter((vehicle) => {
-  const text = search.toLowerCase()
+    const matchesSearch =
+      vehicle.plate_number?.toLowerCase().includes(text) ||
+      vehicle.label?.toLowerCase().includes(text) ||
+      vehicle.brand?.toLowerCase().includes(text) ||
+      vehicle.vehicle_type?.toLowerCase().includes(text)
 
-  return (
-    vehicle.plate_number?.toLowerCase().includes(text) ||
-    vehicle.label?.toLowerCase().includes(text) ||
-    vehicle.brand?.toLowerCase().includes(text)
-  )
-})
+    const matchesType =
+      activeTypeTab === 'all' ||
+      vehicle.vehicle_type?.toLowerCase() === activeTypeTab
+
+    return matchesSearch && matchesType
+  })
 
   return (
     <MainLayout>
@@ -106,59 +124,92 @@ const filteredVehicles = vehicles.filter((vehicle) => {
       <div className="panel-grid">
         <div className="panel">
           <h3 className="panel-title">Liste des véhicules</h3>
+
           <input
-  value={search}
-  onChange={(e) => setSearch(e.target.value)}
-  placeholder="Rechercher véhicule, plaque, marque..."
-  className="form-input"
-  style={{
-    marginTop: 14,
-    marginBottom: 16
-  }}
-/>
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Rechercher véhicule, plaque, marque..."
+            className="form-input"
+            style={{
+              marginTop: 14,
+              marginBottom: 16
+            }}
+          />
+
+          <div
+            style={{
+              display: 'flex',
+              gap: 8,
+              flexWrap: 'wrap',
+              marginBottom: 16
+            }}
+          >
+            {vehicleTypes.map((item) => (
+              <button
+                key={item.value}
+                type="button"
+                onClick={() => {
+                  setActiveTypeTab(item.value)
+                  setVisibleCount(10)
+                }}
+                className={
+                  activeTypeTab === item.value
+                    ? 'btn-primary'
+                    : 'btn-secondary'
+                }
+                style={{
+                  padding: '8px 12px',
+                  fontSize: 13
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
           <p className="panel-subtitle">Véhicules rattachés aux divisions.</p>
 
           <div style={{ display: 'grid', gap: 12 }}>
-  {filteredVehicles
-  .slice(0, visibleCount)
-  .map((vehicle) => (
-    <EntityCard
-      key={vehicle.id}
-      title={vehicle.plate_number}
-      subtitle={vehicle.label || 'Véhicule'}
-      badge="SUPPRIMER"
-      badgeTone="danger"
-      onAction={() => handleDelete(vehicle.id)}
-      items={[
-        {
-          label: 'Type',
-          value: vehicle.vehicle_type || '-'
-        },
-        {
-          label: 'Carburant',
-          value: vehicle.fuel_type || '-'
-        },
-        {
-          label: 'Division',
-          value: vehicle.division?.name || '-'
-        }
-      ]}
-    />
-  ))}
+            {filteredVehicles
+              .slice(0, visibleCount)
+              .map((vehicle) => (
+                <EntityCard
+                  key={vehicle.id}
+                  title={vehicle.plate_number}
+                  subtitle={vehicle.label || 'Véhicule'}
+                  badge="SUPPRIMER"
+                  badgeTone="danger"
+                  onAction={() => handleDelete(vehicle.id)}
+                  items={[
+                    {
+                      label: 'Type',
+                      value: vehicle.vehicle_type || '-'
+                    },
+                    {
+                      label: 'Carburant',
+                      value: vehicle.fuel_type || '-'
+                    },
+                    {
+                      label: 'Division',
+                      value: vehicle.division?.name || '-'
+                    }
+                  ]}
+                />
+              ))}
 
-  {filteredVehicles.length > visibleCount && (
-  <button
-    className="btn-secondary"
-    onClick={() => setVisibleCount(visibleCount + 10)}
-  >
-    Voir plus
-  </button>
-)}
+            {filteredVehicles.length > visibleCount && (
+              <button
+                className="btn-secondary"
+                onClick={() => setVisibleCount(visibleCount + 10)}
+              >
+                Voir plus
+              </button>
+            )}
 
-  {filteredVehicles.length === 0 && (
-    <p style={{ color: '#94a3b8' }}>Aucun véhicule enregistré.</p>
-  )}
-</div>
+            {filteredVehicles.length === 0 && (
+              <p style={{ color: '#94a3b8' }}>Aucun véhicule enregistré.</p>
+            )}
+          </div>
         </div>
 
         <div className="panel">
@@ -180,12 +231,19 @@ const filteredVehicles = vehicles.filter((vehicle) => {
               className="form-input"
             />
 
-            <input
+            <select
               value={vehicleType}
               onChange={(e) => setVehicleType(e.target.value)}
-              placeholder="Type : pick-up, camion, bus..."
               className="form-input"
-            />
+            >
+              <option value="pick-up">Pick-up</option>
+              <option value="camion">Camion</option>
+              <option value="bus">Bus</option>
+              <option value="engin">Engin</option>
+              <option value="voiture">Voiture</option>
+              <option value="moto">Moto</option>
+              <option value="autre">Autre</option>
+            </select>
 
             <select
               value={fuelType}
