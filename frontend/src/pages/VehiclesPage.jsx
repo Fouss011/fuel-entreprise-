@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import MainLayout from '../layouts/MainLayout'
+import EntityCard from '../components/EntityCard'
 import {
   createVehicle,
   deleteVehicle,
@@ -128,7 +129,9 @@ export default function VehiclesPage() {
       vehicle.plate_number?.toLowerCase().includes(text) ||
       vehicle.label?.toLowerCase().includes(text) ||
       vehicle.brand?.toLowerCase().includes(text) ||
-      vehicle.vehicle_type?.toLowerCase().includes(text)
+      vehicle.vehicle_type?.toLowerCase().includes(text) ||
+      vehicle.division?.name?.toLowerCase().includes(text) ||
+      vehicle.division?.code?.toLowerCase().includes(text)
 
     const matchesType =
       activeTypeTab === 'all' ||
@@ -157,12 +160,22 @@ export default function VehiclesPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher véhicule, plaque, marque..."
+            placeholder="Rechercher véhicule, plaque, catégorie, division..."
             className="form-input"
-            style={{ marginTop: 14, marginBottom: 16 }}
+            style={{
+              marginTop: 14,
+              marginBottom: 16
+            }}
           />
 
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: 8,
+              flexWrap: 'wrap',
+              marginBottom: 16
+            }}
+          >
             {vehicleTypes.map((item) => (
               <button
                 key={item.value}
@@ -171,8 +184,15 @@ export default function VehiclesPage() {
                   setActiveTypeTab(item.value)
                   setVisibleCount(10)
                 }}
-                className={activeTypeTab === item.value ? 'btn-primary' : 'btn-secondary'}
-                style={{ padding: '8px 12px', fontSize: 13 }}
+                className={
+                  activeTypeTab === item.value
+                    ? 'btn-primary'
+                    : 'btn-secondary'
+                }
+                style={{
+                  padding: '8px 12px',
+                  fontSize: 13
+                }}
               >
                 {item.label}
               </button>
@@ -186,64 +206,50 @@ export default function VehiclesPage() {
           </p>
 
           <div style={{ display: 'grid', gap: 12 }}>
-            {filteredVehicles.slice(0, visibleCount).map((vehicle) => (
-              <div key={vehicle.id} className="entity-card">
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    gap: 12,
-                    alignItems: 'flex-start'
-                  }}
-                >
-                  <div>
-                    <h4 style={{ margin: 0 }}>{vehicle.plate_number}</h4>
-                    <p style={{ margin: '6px 0 0', color: '#94a3b8' }}>
-                      {vehicle.label || 'Véhicule'}
-                    </p>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <button
-                      type="button"
-                      className="btn-secondary"
-                      onClick={() => handleEdit(vehicle)}
-                      style={{ padding: '7px 10px', fontSize: 12 }}
-                    >
-                      MODIFIER
-                    </button>
-
-                    <button
-                      type="button"
-                      className="btn-secondary"
-                      onClick={() => handleDelete(vehicle.id)}
-                      style={{
-                        padding: '7px 10px',
-                        fontSize: 12,
-                        color: '#b91c1c'
-                      }}
-                    >
-                      SUPPRIMER
-                    </button>
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gap: 8, marginTop: 14 }}>
-                  <p style={{ margin: 0 }}>
-                    <strong>Catégorie :</strong> {vehicle.vehicle_type || 'Non classé'}
-                  </p>
-                  <p style={{ margin: 0 }}>
-                    <strong>Carburant :</strong> {vehicle.fuel_type || '-'}
-                  </p>
-                  <p style={{ margin: 0 }}>
-                    <strong>Division :</strong>{' '}
-                    {vehicle.division?.code
-                      ? `${vehicle.division.code} — ${vehicle.division.name}`
-                      : vehicle.division?.name || '-'}
-                  </p>
-                </div>
-              </div>
-            ))}
+            {filteredVehicles
+              .slice(0, visibleCount)
+              .map((vehicle) => (
+                <EntityCard
+                  key={vehicle.id}
+                  title={vehicle.plate_number}
+                  subtitle={vehicle.label || 'Véhicule'}
+                  badge="SUPPRIMER"
+                  badgeTone="danger"
+                  onAction={() => handleDelete(vehicle.id)}
+                  items={[
+                    {
+                      label: 'Catégorie',
+                      value: vehicle.vehicle_type || 'Non classé'
+                    },
+                    {
+                      label: 'Carburant',
+                      value: vehicle.fuel_type || '-'
+                    },
+                    {
+                      label: 'Division',
+                      value: vehicle.division?.code
+                        ? `${vehicle.division.code} — ${vehicle.division.name}`
+                        : vehicle.division?.name || '-'
+                    },
+                    {
+                      label: 'Modifier',
+                      value: (
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          onClick={() => handleEdit(vehicle)}
+                          style={{
+                            padding: '7px 10px',
+                            fontSize: 12
+                          }}
+                        >
+                          MODIFIER
+                        </button>
+                      )
+                    }
+                  ]}
+                />
+              ))}
 
             {filteredVehicles.length > visibleCount && (
               <button
@@ -317,7 +323,9 @@ export default function VehiclesPage() {
               <option value="">Aucune division</option>
               {divisions.map((division) => (
                 <option key={division.id} value={division.id}>
-                  {division.code ? `${division.code} — ${division.name}` : division.name}
+                  {division.code
+                    ? `${division.code} — ${division.name}`
+                    : division.name}
                 </option>
               ))}
             </select>
@@ -335,7 +343,11 @@ export default function VehiclesPage() {
             </button>
 
             {editingVehicleId && (
-              <button type="button" className="btn-secondary" onClick={resetForm}>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={resetForm}
+              >
                 Annuler la modification
               </button>
             )}
