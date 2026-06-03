@@ -108,8 +108,8 @@ export default function DivisionsPage() {
   .map((division) => (
   <EntityCard
     key={division.id}
-    title={division.name}
-    subtitle="Division / service"
+    title={division.code}
+    subtitle={division.name}
     badge="SUPPRIMER"
     badgeTone="danger"
     onAction={() => handleDelete(division.id)}
