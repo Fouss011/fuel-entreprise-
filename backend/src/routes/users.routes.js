@@ -16,14 +16,14 @@ router.get('/', authMiddleware, getUsers)
 router.post(
   '/',
   authMiddleware,
-  requireRole('super_admin', 'direction'),
+  requireRole('super_admin', 'direction', 'formateur'),
   createUser
 )
 
 router.delete(
   '/:id',
   authMiddleware,
-  requireRole('super_admin', 'direction'),
+  requireRole('super_admin', 'direction', 'formateur'),
   deleteUser
 )
 

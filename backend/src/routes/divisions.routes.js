@@ -16,14 +16,14 @@ router.get('/', authMiddleware, getDivisions)
 router.post(
   '/',
   authMiddleware,
-  requireRole('super_admin', 'direction'),
+  requireRole('super_admin', 'direction', 'formateur'),
   createDivision
 )
 
 router.delete(
   '/:id',
   authMiddleware,
-  requireRole('super_admin', 'direction'),
+  requireRole('super_admin', 'direction', 'formateur'),
   deleteDivision
 )
 

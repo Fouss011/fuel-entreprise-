@@ -18,28 +18,28 @@ router.get('/', authMiddleware, getFuelVouchers)
 router.post(
   '/',
   authMiddleware,
-  requireRole('super_admin', 'direction', 'chef_division'),
+  requireRole('super_admin', 'direction', 'chef_division', 'formateur'),
   createFuelVoucher
 )
 
 router.patch(
   '/:id/approve',
   authMiddleware,
-  requireRole('super_admin', 'direction', 'chef_division'),
+  requireRole('super_admin', 'direction', 'chef_division', 'formateur'),
   approveFuelVoucher
 )
 
 router.patch(
   '/:id/reject',
   authMiddleware,
-  requireRole('super_admin', 'direction', 'chef_division'),
+  requireRole('super_admin', 'direction', 'chef_division', 'formateur'),
   rejectFuelVoucher
 )
 
 router.delete(
   '/:id',
   authMiddleware,
-  requireRole('super_admin', 'direction', 'chef_division'),
+  requireRole('super_admin', 'direction', 'chef_division', 'formateur'),
   deleteFuelVoucher
 )
 

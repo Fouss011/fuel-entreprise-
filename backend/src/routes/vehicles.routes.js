@@ -17,21 +17,21 @@ router.get('/', authMiddleware, getVehicles)
 router.post(
   '/',
   authMiddleware,
-  requireRole('super_admin', 'direction'),
+  requireRole('super_admin', 'direction', 'formateur'),
   createVehicle
 )
 
 router.patch(
   '/:id',
   authMiddleware,
-  requireRole('super_admin', 'direction'),
+  requireRole('super_admin', 'direction', 'formateur'),
   updateVehicle
 )
 
 router.delete(
   '/:id',
   authMiddleware,
-  requireRole('super_admin', 'direction'),
+  requireRole('super_admin', 'direction', 'formateur'),
   deleteVehicle
 )
 

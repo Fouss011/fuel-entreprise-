@@ -10,7 +10,8 @@ const rolesWithLogin = [
   'super_admin',
   'direction',
   'chef_division',
-  'pompiste'
+  'pompiste',
+  'formateur'
 ]
 
 export async function getUsers(req, res) {

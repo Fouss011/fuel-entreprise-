@@ -27,7 +27,8 @@ const rolesWithLogin = [
   'super_admin',
   'direction',
   'chef_division',
-  'pompiste'
+  'pompiste',
+  'formateur'
 ]
 
 const roleLabels = {
@@ -393,7 +394,9 @@ export default function UsersPage() {
                 <option value="">Aucune division</option>
                 {divisions.map((division) => (
                   <option key={division.id} value={division.id}>
-                    {division.name}
+                    {division.code
+                      ? `${division.code} — ${division.name}`
+                      : division.name}
                   </option>
                 ))}
               </select>
