@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import MainLayout from '../layouts/MainLayout'
 import EntityCard from '../components/EntityCard'
 import {
@@ -37,6 +37,7 @@ export default function VehiclesPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [visibleCount, setVisibleCount] = useState(10)
+  const formPanelRef = useRef(null)
 
   async function loadData() {
     const [vehiclesData, divisionsData] = await Promise.all([
@@ -67,14 +68,21 @@ export default function VehiclesPage() {
   }
 
   function handleEdit(vehicle) {
-    setEditingVehicleId(vehicle.id)
-    setPlateNumber(vehicle.plate_number || '')
-    setLabel(vehicle.label || '')
-    setVehicleType(vehicle.vehicle_type || 'pick-up')
-    setFuelType(vehicle.fuel_type || 'diesel')
-    setDivisionId(vehicle.division_id || '')
-    setError('')
-  }
+  setEditingVehicleId(vehicle.id)
+  setPlateNumber(vehicle.plate_number || '')
+  setLabel(vehicle.label || '')
+  setVehicleType(vehicle.vehicle_type || 'pick-up')
+  setFuelType(vehicle.fuel_type || 'diesel')
+  setDivisionId(vehicle.division_id || '')
+  setError('')
+
+  setTimeout(() => {
+    formPanelRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    })
+  }, 100)
+}
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -266,7 +274,7 @@ export default function VehiclesPage() {
           </div>
         </div>
 
-        <div className="panel">
+        <div className="panel" ref={formPanelRef}>
           <h3 className="panel-title">
             {editingVehicleId ? 'Modifier le véhicule' : 'Ajouter un véhicule'}
           </h3>
