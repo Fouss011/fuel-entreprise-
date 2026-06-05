@@ -11,7 +11,7 @@ export async function getAnalytics(req, res) {
           voucher_number,
           approved_liters,
           requested_liters,
-          division:divisions(name),
+          division:divisions(name, code),
           vehicle:vehicles(
             id,
             plate_number,
@@ -45,28 +45,21 @@ export async function getAnalytics(req, res) {
           plateNumber: vehicle.plate_number,
           label: vehicle.label,
           totalLiters: 0,
-          totalAmount: 0,
+          totalOdometer: 0,
           totalDeliveries: 0
         }
       }
 
-      vehicleStats[vehicle.id].totalLiters +=
-        Number(item.delivered_liters || 0)
-
-      vehicleStats[vehicle.id].totalAmount +=
-        Number(item.total_amount || 0)
-
+      vehicleStats[vehicle.id].totalLiters += Number(item.delivered_liters || 0)
+      vehicleStats[vehicle.id].totalOdometer += Number(item.odometer_km || 0)
       vehicleStats[vehicle.id].totalDeliveries += 1
 
-      const approved =
-        Number(item.voucher?.approved_liters || 0)
-
-      const delivered =
-        Number(item.delivered_liters || 0)
+      const approved = Number(item.voucher?.approved_liters || 0)
+      const delivered = Number(item.delivered_liters || 0)
 
       if (delivered > approved) {
         anomalies.push({
-          type: 'OVER_DELIVERY',
+          type: 'Quantité servie supérieure à la quantité approuvée',
           voucherNumber: item.voucher?.voucher_number,
           plateNumber: vehicle.plate_number,
           approved,
@@ -76,17 +69,16 @@ export async function getAnalytics(req, res) {
 
       if (delivered <= 0) {
         anomalies.push({
-          type: 'ZERO_DELIVERY',
+          type: 'Livraison nulle ou invalide',
           voucherNumber: item.voucher?.voucher_number,
           plateNumber: vehicle.plate_number
         })
       }
     }
 
-    const topVehicles =
-      Object.values(vehicleStats)
-        .sort((a, b) => b.totalLiters - a.totalLiters)
-        .slice(0, 10)
+    const topVehicles = Object.values(vehicleStats)
+      .sort((a, b) => b.totalLiters - a.totalLiters)
+      .slice(0, 10)
 
     return res.json({
       topVehicles,

@@ -5,7 +5,7 @@ import {
   Download,
   FileText,
   Fuel,
-  Wallet
+  Gauge
 } from 'lucide-react'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
@@ -17,8 +17,6 @@ import EntityCard from '../components/EntityCard'
 import { getMonthlyClosing } from '../api/api'
 
 export default function MonthlyClosingPage() {
-  
-
   const [month, setMonth] = useState(
     new Date().toISOString().slice(0, 7)
   )
@@ -26,7 +24,7 @@ export default function MonthlyClosingPage() {
   const [summary, setSummary] = useState({
     totalDeliveries: 0,
     totalLiters: 0,
-    totalAmount: 0
+    totalOdometer: 0
   })
 
   const [vehicles, setVehicles] = useState([])
@@ -43,7 +41,7 @@ export default function MonthlyClosingPage() {
       data.summary || {
         totalDeliveries: 0,
         totalLiters: 0,
-        totalAmount: 0
+        totalOdometer: 0
       }
     )
 
@@ -55,57 +53,57 @@ export default function MonthlyClosingPage() {
   }
 
   function exportPDF() {
-  const doc = new jsPDF()
+    const doc = new jsPDF()
 
-  doc.setFontSize(18)
-  doc.text('Clôture mensuelle carburant', 14, 18)
+    doc.setFontSize(18)
+    doc.text('Clôture mensuelle carburant', 14, 18)
 
-  doc.setFontSize(10)
-  doc.text(`Période : ${month}`, 14, 28)
+    doc.setFontSize(10)
+    doc.text(`Période : ${month}`, 14, 28)
 
-  doc.setFontSize(12)
-  doc.text(`Nombre de livraisons : ${summary.totalDeliveries}`, 14, 42)
-  doc.text(`Litres servis : ${summary.totalLiters} L`, 14, 49)
-  doc.text(`Montant total : ${summary.totalAmount} FCFA`, 14, 56)
+    doc.setFontSize(12)
+    doc.text(`Nombre de livraisons : ${summary.totalDeliveries}`, 14, 42)
+    doc.text(`Litres servis : ${summary.totalLiters} L`, 14, 49)
+    doc.text(`Kilométrage total relevé : ${summary.totalOdometer || 0} km`, 14, 56)
 
-  autoTable(doc, {
-    startY: 68,
-    head: [[
-      'Véhicule',
-      'Libellé',
-      'Litres',
-      'Montant',
-      'Livraisons'
-    ]],
-    body: vehicles.map((vehicle) => [
-      vehicle.plateNumber || '-',
-      vehicle.label || '-',
-      `${vehicle.totalLiters || 0} L`,
-      `${vehicle.totalAmount || 0} FCFA`,
-      vehicle.deliveries || 0
-    ])
-  })
+    autoTable(doc, {
+      startY: 68,
+      head: [[
+        'Véhicule',
+        'Libellé',
+        'Litres',
+        'Kilométrage',
+        'Livraisons'
+      ]],
+      body: vehicles.map((vehicle) => [
+        vehicle.plateNumber || '-',
+        vehicle.label || '-',
+        `${vehicle.totalLiters || 0} L`,
+        `${vehicle.totalOdometer || 0} km`,
+        vehicle.deliveries || 0
+      ])
+    })
 
-  autoTable(doc, {
-    startY: doc.lastAutoTable.finalY + 12,
-    head: [[
-      'Division',
-      'Code',
-      'Litres',
-      'Montant',
-      'Livraisons'
-    ]],
-    body: divisions.map((division) => [
-      division.name || '-',
-      division.code || '-',
-      `${division.totalLiters || 0} L`,
-      `${division.totalAmount || 0} FCFA`,
-      division.deliveries || 0
-    ])
-  })
+    autoTable(doc, {
+      startY: doc.lastAutoTable.finalY + 12,
+      head: [[
+        'Division',
+        'Code',
+        'Litres',
+        'Kilométrage',
+        'Livraisons'
+      ]],
+      body: divisions.map((division) => [
+        division.name || '-',
+        division.code || '-',
+        `${division.totalLiters || 0} L`,
+        `${division.totalOdometer || 0} km`,
+        division.deliveries || 0
+      ])
+    })
 
-  doc.save(`cloture-mensuelle-${month}.pdf`)
-}
+    doc.save(`cloture-mensuelle-${month}.pdf`)
+  }
 
   useEffect(() => {
     loadData(month)
@@ -118,7 +116,7 @@ export default function MonthlyClosingPage() {
           <p className="page-eyebrow">Audit mensuel</p>
           <h1 className="page-title">Clôture mensuelle</h1>
           <p className="page-subtitle">
-            Consolidation des consommations carburant par véhicule et division.
+            Consolidation des consommations carburant et kilométrages par véhicule et division.
           </p>
         </div>
 
@@ -170,10 +168,10 @@ export default function MonthlyClosingPage() {
           />
 
           <StatCard
-            title="Montant"
-            value={`${summary.totalAmount} FCFA`}
-            subtitle="Coût mensuel"
-            icon={<Wallet size={21} />}
+            title="Kilométrage"
+            value={`${summary.totalOdometer || 0} km`}
+            subtitle="Cumul relevé"
+            icon={<Gauge size={21} />}
             tone="amber"
           />
         </section>
@@ -198,15 +196,15 @@ export default function MonthlyClosingPage() {
                     items={[
                       {
                         label: 'Litres',
-                        value: `${vehicle.totalLiters} L`
+                        value: `${vehicle.totalLiters || 0} L`
                       },
                       {
-                        label: 'Montant',
-                        value: `${vehicle.totalAmount} FCFA`
+                        label: 'Kilométrage',
+                        value: `${vehicle.totalOdometer || 0} km`
                       },
                       {
                         label: 'Livraisons',
-                        value: vehicle.deliveries
+                        value: vehicle.deliveries || 0
                       }
                     ]}
                   />
@@ -257,15 +255,15 @@ export default function MonthlyClosingPage() {
                     items={[
                       {
                         label: 'Litres',
-                        value: `${division.totalLiters} L`
+                        value: `${division.totalLiters || 0} L`
                       },
                       {
-                        label: 'Montant',
-                        value: `${division.totalAmount} FCFA`
+                        label: 'Kilométrage',
+                        value: `${division.totalOdometer || 0} km`
                       },
                       {
                         label: 'Livraisons',
-                        value: division.deliveries
+                        value: division.deliveries || 0
                       }
                     ]}
                   />

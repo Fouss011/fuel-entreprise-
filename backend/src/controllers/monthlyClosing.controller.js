@@ -33,17 +33,21 @@ export async function getMonthlyClosing(req, res) {
 
     const { data, error } = await query
 
-    if (error) {
-      return res.status(400).json({ error: error.message })
-    }
+    if (error) return res.status(400).json({ error: error.message })
 
     const deliveries = data || []
 
     const summary = {
       month,
       totalDeliveries: deliveries.length,
-      totalLiters: deliveries.reduce((sum, item) => sum + Number(item.delivered_liters || 0), 0),
-      totalAmount: deliveries.reduce((sum, item) => sum + Number(item.total_amount || 0), 0)
+      totalLiters: deliveries.reduce(
+        (sum, item) => sum + Number(item.delivered_liters || 0),
+        0
+      ),
+      totalOdometer: deliveries.reduce(
+        (sum, item) => sum + Number(item.odometer_km || 0),
+        0
+      )
     }
 
     const byVehicleMap = {}
@@ -52,6 +56,7 @@ export async function getMonthlyClosing(req, res) {
     for (const item of deliveries) {
       const vehicle = item.voucher?.vehicle
       const division = item.voucher?.division
+      const odometer = Number(item.odometer_km || 0)
 
       if (vehicle) {
         if (!byVehicleMap[vehicle.id]) {
@@ -60,13 +65,13 @@ export async function getMonthlyClosing(req, res) {
             plateNumber: vehicle.plate_number,
             label: vehicle.label,
             totalLiters: 0,
-            totalAmount: 0,
+            totalOdometer: 0,
             deliveries: 0
           }
         }
 
         byVehicleMap[vehicle.id].totalLiters += Number(item.delivered_liters || 0)
-        byVehicleMap[vehicle.id].totalAmount += Number(item.total_amount || 0)
+        byVehicleMap[vehicle.id].totalOdometer += odometer
         byVehicleMap[vehicle.id].deliveries += 1
       }
 
@@ -77,13 +82,13 @@ export async function getMonthlyClosing(req, res) {
             name: division.name,
             code: division.code,
             totalLiters: 0,
-            totalAmount: 0,
+            totalOdometer: 0,
             deliveries: 0
           }
         }
 
         byDivisionMap[division.id].totalLiters += Number(item.delivered_liters || 0)
-        byDivisionMap[division.id].totalAmount += Number(item.total_amount || 0)
+        byDivisionMap[division.id].totalOdometer += odometer
         byDivisionMap[division.id].deliveries += 1
       }
     }

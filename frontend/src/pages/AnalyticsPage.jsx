@@ -42,7 +42,7 @@ export default function AnalyticsPage() {
           </h1>
 
           <p className="page-subtitle">
-            Détection des véhicules les plus consommateurs et des opérations suspectes.
+            Suivi des véhicules les plus consommateurs et des opérations à contrôler.
           </p>
         </div>
       </div>
@@ -65,7 +65,7 @@ export default function AnalyticsPage() {
           </div>
 
           <p className="panel-subtitle">
-            Classement consommation.
+            Classement par volume de carburant servi.
           </p>
 
           <div style={{ display: 'grid', gap: 14 }}>
@@ -81,15 +81,15 @@ export default function AnalyticsPage() {
                   items={[
                     {
                       label: 'Litres',
-                      value: `${vehicle.totalLiters} L`
+                      value: `${vehicle.totalLiters || 0} L`
                     },
                     {
-                      label: 'Montant',
-                      value: `${vehicle.totalAmount} FCFA`
+                      label: 'Kilométrage relevé',
+                      value: `${vehicle.totalOdometer || 0} km`
                     },
                     {
                       label: 'Livraisons',
-                      value: vehicle.totalDeliveries
+                      value: vehicle.totalDeliveries || 0
                     }
                   ]}
                 />
@@ -138,7 +138,7 @@ export default function AnalyticsPage() {
           </div>
 
           <p className="panel-subtitle">
-            Bons ou opérations suspectes.
+            Alertes simples sur les bons et opérations carburant.
           </p>
 
           <div style={{ display: 'grid', gap: 14 }}>
