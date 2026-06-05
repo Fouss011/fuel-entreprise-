@@ -8,16 +8,29 @@ import StatCard from '../components/StatCard'
 import EntityCard from '../components/EntityCard'
 import SearchSelect from '../components/SearchSelect'
 
-import { getVehicleHistory, getVehicles } from '../api/api'
+import {
+  getVehicleHistory,
+  getVehicles,
+  updateFuelDelivery
+} from '../api/api'
 
 export default function VehicleHistoryPage() {
   const exportRef = useRef(null)
+  const editRef = useRef(null)
 
   const [deliveries, setDeliveries] = useState([])
   const [vehicles, setVehicles] = useState([])
   const [vehicleId, setVehicleId] = useState('')
   const [month, setMonth] = useState('')
   const [exporting, setExporting] = useState(false)
+
+  const [editingDelivery, setEditingDelivery] = useState(null)
+  const [deliveredLiters, setDeliveredLiters] = useState('')
+  const [odometerKm, setOdometerKm] = useState('')
+  const [stationName, setStationName] = useState('')
+  const [deliveryNotes, setDeliveryNotes] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
 
   async function loadVehicles() {
     const vehiclesData = await getVehicles()
@@ -43,6 +56,57 @@ export default function VehicleHistoryPage() {
       loadHistory(vehicleId, month)
     }
   }, [vehicleId, month])
+
+  function startEdit(item) {
+    setEditingDelivery(item)
+    setDeliveredLiters(item.delivered_liters || '')
+    setOdometerKm(item.odometer_km || '')
+    setStationName(item.station_name || '')
+    setDeliveryNotes(item.delivery_notes || '')
+    setError('')
+
+    setTimeout(() => {
+      editRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      })
+    }, 100)
+  }
+
+  function cancelEdit() {
+    setEditingDelivery(null)
+    setDeliveredLiters('')
+    setOdometerKm('')
+    setStationName('')
+    setDeliveryNotes('')
+    setError('')
+  }
+
+  async function handleUpdateDelivery(e) {
+    e.preventDefault()
+
+    if (!editingDelivery) return
+
+    setSaving(true)
+    setError('')
+
+    const data = await updateFuelDelivery(editingDelivery.id, {
+      deliveredLiters,
+      odometerKm,
+      stationName,
+      deliveryNotes
+    })
+
+    if (data.error) {
+      setError(data.error)
+      setSaving(false)
+      return
+    }
+
+    cancelEdit()
+    await loadHistory(vehicleId, month)
+    setSaving(false)
+  }
 
   const filteredDeliveries = useMemo(() => {
     return [...deliveries].sort((a, b) => {
@@ -162,6 +226,61 @@ export default function VehicleHistoryPage() {
           </button>
         </div>
       </div>
+
+      {editingDelivery && (
+        <div className="panel" ref={editRef} style={{ marginBottom: 22 }}>
+          <h3 className="panel-title">Modifier une livraison servie</h3>
+          <p className="panel-subtitle">
+            Bon : {editingDelivery.voucher?.voucher_number || '-'} — Véhicule : {editingDelivery.voucher?.vehicle?.plate_number || '-'}
+          </p>
+
+          <form onSubmit={handleUpdateDelivery} style={{ display: 'grid', gap: 14 }}>
+            <input
+              value={deliveredLiters}
+              onChange={(e) => setDeliveredLiters(e.target.value)}
+              placeholder="Litres servis"
+              className="form-input"
+              type="number"
+            />
+
+            <input
+              value={odometerKm}
+              onChange={(e) => setOdometerKm(e.target.value)}
+              placeholder="Kilométrage compteur"
+              className="form-input"
+              type="number"
+            />
+
+            <input
+              value={stationName}
+              onChange={(e) => setStationName(e.target.value)}
+              placeholder="Station / pompe"
+              className="form-input"
+            />
+
+            <input
+              value={deliveryNotes}
+              onChange={(e) => setDeliveryNotes(e.target.value)}
+              placeholder="Observation"
+              className="form-input"
+            />
+
+            {error && <p style={{ color: '#b91c1c' }}>{error}</p>}
+
+            <button className="btn-primary" disabled={saving}>
+              {saving ? 'Modification...' : 'Mettre à jour la livraison'}
+            </button>
+
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={cancelEdit}
+            >
+              Annuler
+            </button>
+          </form>
+        </div>
+      )}
 
       <div ref={exportRef}>
         <div className="panel" style={{ marginBottom: 22 }}>
@@ -309,8 +428,9 @@ export default function VehicleHistoryPage() {
                     ? new Date(item.delivered_at).toLocaleString('fr-FR')
                     : 'Date inconnue'
                 }
-                badge="SERVI"
-                badgeTone="success"
+                badge="MODIFIER"
+                badgeTone="blue"
+                onAction={() => startEdit(item)}
                 items={[
                   {
                     label: 'Véhicule',

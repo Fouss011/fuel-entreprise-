@@ -161,3 +161,47 @@ export async function deliverFuel(req, res) {
     return res.status(500).json({ error: 'Erreur livraison carburant' })
   }
 }
+
+export async function updateFuelDelivery(req, res) {
+  try {
+    const { id } = req.params
+
+    const {
+      deliveredLiters,
+      odometerKm,
+      stationName,
+      deliveryNotes
+    } = req.body
+
+    if (!deliveredLiters || !odometerKm) {
+      return res.status(400).json({
+        error: 'Quantité livrée et kilométrage requis'
+      })
+    }
+
+    let query = supabase
+      .from('fuel_deliveries')
+      .update({
+        delivered_liters: Number(deliveredLiters),
+        odometer_km: Number(odometerKm),
+        station_name: stationName || null,
+        delivery_notes: deliveryNotes || null,
+        unit_price: 0,
+        total_amount: 0
+      })
+      .eq('id', id)
+      .select('*')
+      .single()
+
+    query = applyStructureScope(query, req)
+
+    const { data, error } = await query
+
+    if (error) return res.status(400).json({ error: error.message })
+
+    return res.json({ delivery: data })
+  } catch (error) {
+    console.error('UPDATE_FUEL_DELIVERY_ERROR =>', error)
+    return res.status(500).json({ error: 'Erreur modification livraison' })
+  }
+}

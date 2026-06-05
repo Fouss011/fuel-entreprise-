@@ -3,7 +3,8 @@ import express from 'express'
 import {
   getApprovedVouchers,
   deliverFuel,
-  searchVoucherByCode
+  searchVoucherByCode,
+  updateFuelDelivery
 } from '../controllers/fuelDeliveries.controller.js'
 
 import { authMiddleware } from '../middleware/authMiddleware.js'
@@ -29,9 +30,21 @@ router.post(
   requireRole(
     'super_admin',
     'direction',
-    'pompiste'
+    'pompiste',
+    'formateur'
   ),
   deliverFuel
+)
+
+router.patch(
+  '/:id',
+  authMiddleware,
+  requireRole(
+    'super_admin',
+    'direction',
+    'formateur'
+  ),
+  updateFuelDelivery
 )
 
 export default router
