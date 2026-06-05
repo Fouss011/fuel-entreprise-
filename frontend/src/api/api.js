@@ -156,6 +156,19 @@ export async function deliverFuel(payload) {
   return response.json()
 }
 
+export async function updateFuelDelivery(id, payload) {
+  const response = await fetch(
+    `${API_URL}/fuel-deliveries/${id}`,
+    {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify(payload)
+    }
+  )
+
+  return response.json()
+}
+
 export async function getDeliveriesReport() {
   const response = await fetch(
     `${API_URL}/reports/deliveries`,
