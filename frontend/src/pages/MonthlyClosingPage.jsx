@@ -24,7 +24,7 @@ export default function MonthlyClosingPage() {
   const [summary, setSummary] = useState({
     totalDeliveries: 0,
     totalLiters: 0,
-    totalOdometer: 0
+    totalDistance: 0
   })
 
   const [vehicles, setVehicles] = useState([])
@@ -41,7 +41,7 @@ export default function MonthlyClosingPage() {
       data.summary || {
         totalDeliveries: 0,
         totalLiters: 0,
-        totalOdometer: 0
+        totalDistance: 0
       }
     )
 
@@ -64,7 +64,7 @@ export default function MonthlyClosingPage() {
     doc.setFontSize(12)
     doc.text(`Nombre de livraisons : ${summary.totalDeliveries}`, 14, 42)
     doc.text(`Litres servis : ${summary.totalLiters} L`, 14, 49)
-    doc.text(`Kilométrage total relevé : ${summary.totalOdometer || 0} km`, 14, 56)
+    doc.text(`Kilométrage total relevé : ${summary.totalDistance || 0} km`, 14, 56)
 
     autoTable(doc, {
       startY: 68,
@@ -79,7 +79,7 @@ export default function MonthlyClosingPage() {
         vehicle.plateNumber || '-',
         vehicle.label || '-',
         `${vehicle.totalLiters || 0} L`,
-        `${vehicle.totalOdometer || 0} km`,
+        `${vehicle.totalDistance || 0} km`,
         vehicle.deliveries || 0
       ])
     })
@@ -97,7 +97,7 @@ export default function MonthlyClosingPage() {
         division.name || '-',
         division.code || '-',
         `${division.totalLiters || 0} L`,
-        `${division.totalOdometer || 0} km`,
+        `${division.totalDistance || 0} km`,
         division.deliveries || 0
       ])
     })
@@ -169,8 +169,8 @@ export default function MonthlyClosingPage() {
 
           <StatCard
             title="Kilométrage"
-            value={`${summary.totalOdometer || 0} km`}
-            subtitle="Cumul relevé"
+            value={`${summary.totalDistance || 0} km`}
+            subtitle="Distance parcourue"
             icon={<Gauge size={21} />}
             tone="amber"
           />
@@ -200,7 +200,7 @@ export default function MonthlyClosingPage() {
                       },
                       {
                         label: 'Kilométrage',
-                        value: `${vehicle.totalOdometer || 0} km`
+                        value: `${vehicle.totalDistance || 0} km`
                       },
                       {
                         label: 'Livraisons',
@@ -259,7 +259,7 @@ export default function MonthlyClosingPage() {
                       },
                       {
                         label: 'Kilométrage',
-                        value: `${division.totalOdometer || 0} km`
+                        value: `${division.totalDistance || 0} km`
                       },
                       {
                         label: 'Livraisons',

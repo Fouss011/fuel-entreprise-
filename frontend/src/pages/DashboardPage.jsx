@@ -27,7 +27,7 @@ export default function DashboardPage() {
     users: 0,
     vouchers: 0,
     liters: 0,
-    amount: 0
+    distance: 0
   })
 
   const [recentDeliveries, setRecentDeliveries] = useState([])
@@ -60,15 +60,27 @@ export default function DashboardPage() {
         0
       )
 
-    const totalAmount =
-      deliveries.reduce(
-        (sum, item) =>
-          sum +
-          Number(
-            item.total_amount || 0
-          ),
-        0
-      )
+    const sortedDeliveries = [...deliveries].sort((a, b) => {
+  const dateA = new Date(a.delivered_at || 0).getTime()
+  const dateB = new Date(b.delivered_at || 0).getTime()
+  return dateA - dateB
+})
+
+let totalDistance = 0
+const lastKmByVehicle = {}
+
+for (const item of sortedDeliveries) {
+  const vehicleId = item.voucher?.vehicle?.id || item.voucher?.vehicle?.plate_number
+  const currentKm = Number(item.odometer_km || 0)
+
+  if (vehicleId && lastKmByVehicle[vehicleId] && currentKm > lastKmByVehicle[vehicleId]) {
+    totalDistance += currentKm - lastKmByVehicle[vehicleId]
+  }
+
+  if (vehicleId && currentKm > 0) {
+    lastKmByVehicle[vehicleId] = currentKm
+  }
+}
 
     setStats({
       divisions:
@@ -84,7 +96,7 @@ export default function DashboardPage() {
         vouchersData.vouchers?.length || 0,
 
       liters: totalLiters,
-      amount: totalAmount
+      distance: totalDistance
     })
 
     setRecentDeliveries(
@@ -160,12 +172,12 @@ export default function DashboardPage() {
   />
 
   <StatCard
-    title="Montant total"
-    value={`${stats.amount} FCFA`}
-    subtitle="Consommation globale"
-    icon={<Activity size={20} />}
-    tone="amber"
-  />
+  title="Distance parcourue"
+  value={`${stats.distance} km`}
+  subtitle="Écart entre relevés compteur"
+  icon={<Activity size={20} />}
+  tone="amber"
+/>
 </section>
 
       <div className="panel-grid">
@@ -224,17 +236,25 @@ export default function DashboardPage() {
                   <br />
 
                   <span>
-                    Servi :
-                    {' '}
-                    {
-                      item.delivered_liters
-                    } L
-                  </span>
+  Servi :
+  {' '}
+  {
+    item.delivered_liters
+  } L
+</span>
 
-                  <br />
+<br />
 
-                  <span>
-                    Station :
+<span>
+  Kilométrage :
+  {' '}
+  {item.odometer_km ? `${item.odometer_km} km` : '-'}
+</span>
+
+<br />
+
+<span>
+  Station :
                     {' '}
                     {item.station_name}
                   </span>

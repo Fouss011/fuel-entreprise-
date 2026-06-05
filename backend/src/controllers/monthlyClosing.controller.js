@@ -1,6 +1,50 @@
 import { supabase } from '../config/supabase.js'
 import { applyStructureScope } from '../utils/scope.js'
 
+function computeDistanceByVehicle(deliveries) {
+  const grouped = {}
+
+  for (const item of deliveries) {
+    const vehicle = item.voucher?.vehicle
+    if (!vehicle?.id) continue
+
+    if (!grouped[vehicle.id]) grouped[vehicle.id] = []
+
+    grouped[vehicle.id].push(item)
+  }
+
+  const distanceByDeliveryId = {}
+  const distanceByVehicleId = {}
+
+  for (const vehicleId of Object.keys(grouped)) {
+    const rows = grouped[vehicleId].sort((a, b) => {
+      const dateA = new Date(a.delivered_at || a.created_at || 0).getTime()
+      const dateB = new Date(b.delivered_at || b.created_at || 0).getTime()
+      return dateA - dateB
+    })
+
+    let totalDistance = 0
+
+    rows.forEach((item, index) => {
+      const previous = rows[index - 1]
+      const currentKm = Number(item.odometer_km || 0)
+      const previousKm = Number(previous?.odometer_km || 0)
+
+      const distance =
+        previous && currentKm > previousKm
+          ? currentKm - previousKm
+          : 0
+
+      distanceByDeliveryId[item.id] = distance
+      totalDistance += distance
+    })
+
+    distanceByVehicleId[vehicleId] = totalDistance
+  }
+
+  return { distanceByDeliveryId, distanceByVehicleId }
+}
+
 export async function getMonthlyClosing(req, res) {
   try {
     const { month } = req.query
@@ -32,10 +76,10 @@ export async function getMonthlyClosing(req, res) {
     query = applyStructureScope(query, req)
 
     const { data, error } = await query
-
     if (error) return res.status(400).json({ error: error.message })
 
     const deliveries = data || []
+    const { distanceByDeliveryId } = computeDistanceByVehicle(deliveries)
 
     const summary = {
       month,
@@ -44,8 +88,8 @@ export async function getMonthlyClosing(req, res) {
         (sum, item) => sum + Number(item.delivered_liters || 0),
         0
       ),
-      totalOdometer: deliveries.reduce(
-        (sum, item) => sum + Number(item.odometer_km || 0),
+      totalDistance: deliveries.reduce(
+        (sum, item) => sum + Number(distanceByDeliveryId[item.id] || 0),
         0
       )
     }
@@ -56,7 +100,7 @@ export async function getMonthlyClosing(req, res) {
     for (const item of deliveries) {
       const vehicle = item.voucher?.vehicle
       const division = item.voucher?.division
-      const odometer = Number(item.odometer_km || 0)
+      const distance = Number(distanceByDeliveryId[item.id] || 0)
 
       if (vehicle) {
         if (!byVehicleMap[vehicle.id]) {
@@ -65,13 +109,13 @@ export async function getMonthlyClosing(req, res) {
             plateNumber: vehicle.plate_number,
             label: vehicle.label,
             totalLiters: 0,
-            totalOdometer: 0,
+            totalDistance: 0,
             deliveries: 0
           }
         }
 
         byVehicleMap[vehicle.id].totalLiters += Number(item.delivered_liters || 0)
-        byVehicleMap[vehicle.id].totalOdometer += odometer
+        byVehicleMap[vehicle.id].totalDistance += distance
         byVehicleMap[vehicle.id].deliveries += 1
       }
 
@@ -82,13 +126,13 @@ export async function getMonthlyClosing(req, res) {
             name: division.name,
             code: division.code,
             totalLiters: 0,
-            totalOdometer: 0,
+            totalDistance: 0,
             deliveries: 0
           }
         }
 
         byDivisionMap[division.id].totalLiters += Number(item.delivered_liters || 0)
-        byDivisionMap[division.id].totalOdometer += odometer
+        byDivisionMap[division.id].totalDistance += distance
         byDivisionMap[division.id].deliveries += 1
       }
     }
