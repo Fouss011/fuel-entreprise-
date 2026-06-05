@@ -12,8 +12,8 @@ export async function getDeliveriesReport(req, res) {
           fuel_type,
           requested_liters,
           approved_liters,
-          division:divisions(name),
-          vehicle:vehicles(plate_number, label)
+          division:divisions(id, name, code),
+          vehicle:vehicles(id, plate_number, label)
         ),
         pompiste:users_profile!fuel_deliveries_pump_attendant_id_fkey(
           full_name
@@ -32,23 +32,21 @@ export async function getDeliveriesReport(req, res) {
     }
 
     const totalLiters = (data || []).reduce(
-      (sum, item) =>
-        sum + Number(item.delivered_liters || 0),
+      (sum, item) => sum + Number(item.delivered_liters || 0),
       0
     )
 
-    const totalAmount = (data || []).reduce(
-      (sum, item) =>
-        sum + Number(item.total_amount || 0),
-      0
-    )
+    const lastOdometer = (data || []).reduce((max, item) => {
+      const km = Number(item.odometer_km || 0)
+      return km > max ? km : max
+    }, 0)
 
     return res.json({
       deliveries: data || [],
       stats: {
         totalDeliveries: data?.length || 0,
         totalLiters,
-        totalAmount
+        lastOdometer
       }
     })
   } catch (error) {

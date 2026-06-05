@@ -7,7 +7,7 @@ export async function getApprovedVouchers(req, res) {
       .from('fuel_vouchers')
       .select(`
         *,
-        division:divisions(id, name),
+        division:divisions(id, name, code),
         vehicle:vehicles(id, plate_number, label),
         driver:users_profile!fuel_vouchers_driver_id_fkey(id, full_name),
         structure:structures(id, name, code)
@@ -40,7 +40,7 @@ export async function searchVoucherByCode(req, res) {
       .from('fuel_vouchers')
       .select(`
         *,
-        division:divisions(id, name),
+        division:divisions(id, name, code),
         vehicle:vehicles(id, plate_number, label),
         driver:users_profile!fuel_vouchers_driver_id_fkey(id, full_name),
         structure:structures(id, name, code)
@@ -68,14 +68,14 @@ export async function deliverFuel(req, res) {
     const {
       voucherId,
       deliveredLiters,
-      unitPrice,
+      odometerKm,
       stationName,
       deliveryNotes
     } = req.body
 
-    if (!voucherId || !deliveredLiters) {
+    if (!voucherId || !deliveredLiters || !odometerKm) {
       return res.status(400).json({
-        error: 'Bon et quantité livrée requis'
+        error: 'Bon, quantité livrée et kilométrage requis'
       })
     }
 
@@ -117,7 +117,6 @@ export async function deliverFuel(req, res) {
     }
 
     const finalStructureId = voucher.structure_id || structureId
-    const totalAmount = Number(deliveredLiters) * Number(unitPrice || 0)
 
     const { data: delivery, error: deliveryError } = await supabase
       .from('fuel_deliveries')
@@ -125,8 +124,9 @@ export async function deliverFuel(req, res) {
         voucher_id: voucherId,
         pump_attendant_id: req.user.id,
         delivered_liters: Number(deliveredLiters),
-        unit_price: Number(unitPrice || 0),
-        total_amount: totalAmount,
+        odometer_km: Number(odometerKm),
+        unit_price: 0,
+        total_amount: 0,
         station_name: stationName || null,
         delivery_notes: deliveryNotes || null,
         structure_id: finalStructureId
@@ -159,61 +159,5 @@ export async function deliverFuel(req, res) {
   } catch (error) {
     console.error('DELIVER_FUEL_ERROR =>', error)
     return res.status(500).json({ error: 'Erreur livraison carburant' })
-  }
-}
-
-export async function getFuelDeliveries(req, res) {
-  try {
-    let query = supabase
-      .from('fuel_deliveries')
-      .select(`
-        *,
-        voucher:fuel_vouchers(
-          id,
-          voucher_number,
-          approved_liters,
-          requested_liters,
-          status,
-          driver:users_profile!fuel_vouchers_driver_id_fkey(id, full_name),
-          vehicle:vehicles(id, plate_number, label),
-          division:divisions(id, name)
-        ),
-        pompiste:users_profile!fuel_deliveries_pump_attendant_id_fkey(id, full_name),
-        structure:structures(id, name, code)
-      `)
-      .order('created_at', { ascending: false })
-
-    query = applyStructureScope(query, req)
-
-    const { data, error } = await query
-
-    if (error) return res.status(400).json({ error: error.message })
-
-    return res.json({ deliveries: data || [] })
-  } catch (error) {
-    console.error('GET_FUEL_DELIVERIES_ERROR =>', error)
-    return res.status(500).json({ error: 'Erreur chargement livraisons' })
-  }
-}
-
-export async function deleteFuelDelivery(req, res) {
-  try {
-    const { id } = req.params
-
-    let query = supabase
-      .from('fuel_deliveries')
-      .delete()
-      .eq('id', id)
-
-    query = applyStructureScope(query, req)
-
-    const { error } = await query
-
-    if (error) return res.status(400).json({ error: error.message })
-
-    return res.json({ message: 'Livraison supprimée' })
-  } catch (error) {
-    console.error('DELETE_FUEL_DELIVERY_ERROR =>', error)
-    return res.status(500).json({ error: 'Erreur suppression livraison' })
   }
 }

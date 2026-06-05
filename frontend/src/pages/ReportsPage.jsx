@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import { FileText, Fuel, Wallet } from 'lucide-react'
+import { FileText, Fuel, Gauge } from 'lucide-react'
 
 import MainLayout from '../layouts/MainLayout'
 import StatCard from '../components/StatCard'
@@ -29,7 +29,8 @@ export default function ReportsPage() {
       const plate = item.voucher?.vehicle?.plate_number?.toLowerCase() || ''
       const vehicleLabel = item.voucher?.vehicle?.label?.toLowerCase() || ''
       const voucherNumber = item.voucher?.voucher_number?.toLowerCase() || ''
-      const division = item.voucher?.division?.name?.toLowerCase() || ''
+      const divisionName = item.voucher?.division?.name?.toLowerCase() || ''
+      const divisionCode = item.voucher?.division?.code?.toLowerCase() || ''
       const pompiste = item.pompiste?.full_name?.toLowerCase() || ''
 
       const matchesSearch =
@@ -37,7 +38,8 @@ export default function ReportsPage() {
         plate.includes(q) ||
         vehicleLabel.includes(q) ||
         voucherNumber.includes(q) ||
-        division.includes(q) ||
+        divisionName.includes(q) ||
+        divisionCode.includes(q) ||
         pompiste.includes(q)
 
       const deliveryMonth = item.delivered_at?.slice(0, 7)
@@ -54,10 +56,10 @@ export default function ReportsPage() {
         (sum, item) => sum + Number(item.delivered_liters || 0),
         0
       ),
-      totalAmount: filteredDeliveries.reduce(
-        (sum, item) => sum + Number(item.total_amount || 0),
-        0
-      )
+      lastOdometer: filteredDeliveries.reduce((max, item) => {
+        const km = Number(item.odometer_km || 0)
+        return km > max ? km : max
+      }, 0)
     }
   }, [filteredDeliveries])
 
@@ -74,7 +76,7 @@ export default function ReportsPage() {
     doc.setFontSize(12)
     doc.text(`Nombre de livraisons : ${stats.totalDeliveries}`, 14, 46)
     doc.text(`Litres servis : ${stats.totalLiters} L`, 14, 53)
-    doc.text(`Montant total : ${stats.totalAmount} FCFA`, 14, 60)
+    doc.text(`Kilométrage max relevé : ${stats.lastOdometer || 0} km`, 14, 60)
 
     autoTable(doc, {
       startY: 70,
@@ -83,7 +85,7 @@ export default function ReportsPage() {
         'Plaque',
         'Division',
         'Litres',
-        'Montant',
+        'Kilométrage',
         'Station',
         'Pompiste',
         'Date'
@@ -91,9 +93,11 @@ export default function ReportsPage() {
       body: filteredDeliveries.map((item) => [
         item.voucher?.voucher_number || '-',
         item.voucher?.vehicle?.plate_number || '-',
-        item.voucher?.division?.name || '-',
+        item.voucher?.division?.code
+          ? `${item.voucher.division.code} - ${item.voucher.division.name}`
+          : item.voucher?.division?.name || '-',
         `${item.delivered_liters || 0} L`,
-        `${item.total_amount || 0} FCFA`,
+        item.odometer_km ? `${item.odometer_km} km` : '-',
         item.station_name || '-',
         item.pompiste?.full_name || '-',
         item.delivered_at
@@ -126,7 +130,7 @@ export default function ReportsPage() {
       <div className="panel" style={{ marginBottom: 22 }}>
         <h3 className="panel-title">Filtres de recherche</h3>
         <p className="panel-subtitle">
-          Filtre les consommations pour sortir un rapport précis.
+          Filtre les consommations et les kilométrages relevés.
         </p>
 
         <div
@@ -173,10 +177,10 @@ export default function ReportsPage() {
         />
 
         <StatCard
-          title="Montant total"
-          value={`${stats.totalAmount} FCFA`}
-          subtitle="Coût filtré"
-          icon={<Wallet size={21} />}
+          title="Kilométrage max"
+          value={`${stats.lastOdometer || 0} km`}
+          subtitle="Dernier relevé le plus élevé"
+          icon={<Gauge size={21} />}
           tone="amber"
         />
       </section>
@@ -205,15 +209,17 @@ export default function ReportsPage() {
                 },
                 {
                   label: 'Division',
-                  value: item.voucher?.division?.name || '-'
+                  value: item.voucher?.division?.code
+                    ? `${item.voucher.division.code} — ${item.voucher.division.name}`
+                    : item.voucher?.division?.name || '-'
                 },
                 {
                   label: 'Litres',
                   value: `${item.delivered_liters || 0} L`
                 },
                 {
-                  label: 'Montant',
-                  value: `${item.total_amount || 0} FCFA`
+                  label: 'Kilométrage',
+                  value: item.odometer_km ? `${item.odometer_km} km` : '-'
                 },
                 {
                   label: 'Station',

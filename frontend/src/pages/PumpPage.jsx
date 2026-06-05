@@ -15,7 +15,7 @@ export default function PumpPage() {
 
   const [searchCode, setSearchCode] = useState('')
   const [deliveredLiters, setDeliveredLiters] = useState('')
-  const [unitPrice, setUnitPrice] = useState('')
+  const [odometerKm, setOdometerKm] = useState('')
   const [stationName, setStationName] = useState('')
   const [deliveryNotes, setDeliveryNotes] = useState('')
 
@@ -49,6 +49,7 @@ export default function PumpPage() {
 
       setSelectedVoucher(voucher)
       setDeliveredLiters(voucher.approved_liters || '')
+      setOdometerKm('')
       return
     }
 
@@ -67,7 +68,7 @@ export default function PumpPage() {
     const data = await deliverFuel({
       voucherId: selectedVoucher.id,
       deliveredLiters,
-      unitPrice,
+      odometerKm,
       stationName,
       deliveryNotes
     })
@@ -81,7 +82,7 @@ export default function PumpPage() {
     setSelectedVoucher(null)
     setSearchCode('')
     setDeliveredLiters('')
-    setUnitPrice('')
+    setOdometerKm('')
     setStationName('')
     setDeliveryNotes('')
 
@@ -96,7 +97,7 @@ export default function PumpPage() {
           <p className="page-eyebrow">Livraison carburant</p>
           <h1 className="page-title">Espace pompiste</h1>
           <p className="page-subtitle">
-            Liste des bons validés à servir. Le pompiste confirme uniquement la quantité réellement livrée.
+            Le pompiste confirme la quantité réellement servie et relève le kilométrage du véhicule.
           </p>
         </div>
 
@@ -162,6 +163,7 @@ export default function PumpPage() {
                   onClick={() => {
                     setSelectedVoucher(voucher)
                     setDeliveredLiters(voucher.approved_liters || '')
+                    setOdometerKm('')
                     setError('')
                   }}
                   style={{
@@ -232,7 +234,7 @@ export default function PumpPage() {
                     }}
                   >
                     <Info label="Véhicule" value={voucher.vehicle?.plate_number || '-'} />
-                    <Info label="Division" value={voucher.division?.name || '-'} />
+                    <Info label="Division" value={voucher.division?.code ? `${voucher.division.code} — ${voucher.division.name}` : voucher.division?.name || '-'} />
                     <Info label="Chauffeur" value={voucher.driver?.full_name || '-'} />
                     <Info label="Quantité approuvée" value={`${voucher.approved_liters || 0} L`} />
                   </div>
@@ -328,7 +330,9 @@ export default function PumpPage() {
                   Véhicule : {selectedVoucher.vehicle?.plate_number || '-'}
                 </p>
                 <p style={{ color: '#cbd5e1', fontSize: 14 }}>
-                  Division : {selectedVoucher.division?.name || '-'}
+                  Division : {selectedVoucher.division?.code
+                    ? `${selectedVoucher.division.code} — ${selectedVoucher.division.name}`
+                    : selectedVoucher.division?.name || '-'}
                 </p>
                 <p style={{ color: '#cbd5e1', fontSize: 14 }}>
                   Chauffeur : {selectedVoucher.driver?.full_name || '-'}
@@ -367,9 +371,9 @@ export default function PumpPage() {
               />
 
               <input
-                value={unitPrice}
-                onChange={(e) => setUnitPrice(e.target.value)}
-                placeholder="Prix du litre"
+                value={odometerKm}
+                onChange={(e) => setOdometerKm(e.target.value)}
+                placeholder="Kilométrage compteur du véhicule"
                 className="form-input"
                 type="number"
               />
