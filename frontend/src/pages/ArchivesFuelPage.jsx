@@ -124,7 +124,7 @@ export default function ArchivesFuelPage() {
                   },
                   {
                     label: 'Archivé par',
-                    value: item.archivedBy?.full_name || '-'
+                    value: item.archived_by ? 'Utilisateur autorisé' : '-'
                   },
                   {
                     label: 'Motif',

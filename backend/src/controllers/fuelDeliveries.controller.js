@@ -289,7 +289,6 @@ export async function getArchivedFuelDeliveries(req, res) {
           division:divisions(id, name, code)
         ),
         pompiste:users_profile!fuel_deliveries_pump_attendant_id_fkey(id, full_name),
-        archivedBy:users_profile!fuel_deliveries_archived_by_fkey(id, full_name),
         structure:structures(id, name, code)
       `)
       .eq('status', 'archived')
