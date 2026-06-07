@@ -7,6 +7,7 @@ import MainLayout from '../layouts/MainLayout'
 import StatCard from '../components/StatCard'
 import EntityCard from '../components/EntityCard'
 import {
+  archiveFuelDelivery,
   getDeliveriesReport,
   updateFuelDelivery
 } from '../api/api'
@@ -86,10 +87,32 @@ export default function ReportsPage() {
     setSaving(false)
   }
 
+  async function handleArchiveDelivery(item) {
+    const reason = window.prompt(
+      `Motif d'archivage du bon ${item.voucher?.voucher_number || ''} :`
+    )
+
+    if (!reason || !reason.trim()) return
+
+    const data = await archiveFuelDelivery(item.id, { reason })
+
+    if (data.error) {
+      setError(data.error)
+      return
+    }
+
+    if (editingDelivery?.id === item.id) {
+      cancelEdit()
+    }
+
+    await loadData()
+  }
+
   const filteredDeliveries = useMemo(() => {
     return deliveries.filter((item) => {
       const q = search.toLowerCase().trim()
 
+      const status = item.status || 'active'
       const plate = item.voucher?.vehicle?.plate_number?.toLowerCase() || ''
       const vehicleLabel = item.voucher?.vehicle?.label?.toLowerCase() || ''
       const voucherNumber = item.voucher?.voucher_number?.toLowerCase() || ''
@@ -109,7 +132,7 @@ export default function ReportsPage() {
       const deliveryMonth = item.delivered_at?.slice(0, 7)
       const matchesMonth = !month || deliveryMonth === month
 
-      return matchesSearch && matchesMonth
+      return status !== 'archived' && matchesSearch && matchesMonth
     })
   }, [deliveries, search, month])
 
@@ -312,45 +335,54 @@ export default function ReportsPage() {
 
         <div style={{ display: 'grid', gap: 14 }}>
           {filteredDeliveries.map((item) => (
-            <EntityCard
-              key={item.id}
-              title={item.voucher?.voucher_number || 'Bon carburant'}
-              subtitle={item.delivered_at
-                ? new Date(item.delivered_at).toLocaleString('fr-FR')
-                : 'Date non renseignée'
-              }
-              badge="MODIFIER"
-              badgeTone="blue"
-              onAction={() => startEdit(item)}
-              items={[
-                {
-                  label: 'Véhicule',
-                  value: `${item.voucher?.vehicle?.plate_number || '-'} — ${item.voucher?.vehicle?.label || 'Sans libellé'}`
-                },
-                {
-                  label: 'Division',
-                  value: item.voucher?.division?.code
-                    ? `${item.voucher.division.code} — ${item.voucher.division.name}`
-                    : item.voucher?.division?.name || '-'
-                },
-                {
-                  label: 'Litres',
-                  value: `${item.delivered_liters || 0} L`
-                },
-                {
-                  label: 'Kilométrage',
-                  value: item.odometer_km ? `${item.odometer_km} km` : '-'
-                },
-                {
-                  label: 'Station',
-                  value: item.station_name || '-'
-                },
-                {
-                  label: 'Pompiste',
-                  value: item.pompiste?.full_name || '-'
+            <div key={item.id} style={{ display: 'grid', gap: 8 }}>
+              <EntityCard
+                title={item.voucher?.voucher_number || 'Bon carburant'}
+                subtitle={item.delivered_at
+                  ? new Date(item.delivered_at).toLocaleString('fr-FR')
+                  : 'Date non renseignée'
                 }
-              ]}
-            />
+                badge="MODIFIER"
+                badgeTone="blue"
+                onAction={() => startEdit(item)}
+                items={[
+                  {
+                    label: 'Véhicule',
+                    value: `${item.voucher?.vehicle?.plate_number || '-'} — ${item.voucher?.vehicle?.label || 'Sans libellé'}`
+                  },
+                  {
+                    label: 'Division',
+                    value: item.voucher?.division?.code
+                      ? `${item.voucher.division.code} — ${item.voucher.division.name}`
+                      : item.voucher?.division?.name || '-'
+                  },
+                  {
+                    label: 'Litres',
+                    value: `${item.delivered_liters || 0} L`
+                  },
+                  {
+                    label: 'Kilométrage',
+                    value: item.odometer_km ? `${item.odometer_km} km` : '-'
+                  },
+                  {
+                    label: 'Station',
+                    value: item.station_name || '-'
+                  },
+                  {
+                    label: 'Pompiste',
+                    value: item.pompiste?.full_name || '-'
+                  }
+                ]}
+              />
+
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => handleArchiveDelivery(item)}
+              >
+                Archiver cette livraison
+              </button>
+            </div>
           ))}
 
           {filteredDeliveries.length === 0 && (

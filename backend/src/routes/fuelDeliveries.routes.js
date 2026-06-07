@@ -4,7 +4,10 @@ import {
   getApprovedVouchers,
   deliverFuel,
   searchVoucherByCode,
-  updateFuelDelivery
+  updateFuelDelivery,
+  archiveFuelDelivery,
+  restoreFuelDelivery,
+  getArchivedFuelDeliveries
 } from '../controllers/fuelDeliveries.controller.js'
 
 import { authMiddleware } from '../middleware/authMiddleware.js'
@@ -22,6 +25,17 @@ router.get(
   '/search',
   authMiddleware,
   searchVoucherByCode
+)
+
+router.get(
+  '/archives',
+  authMiddleware,
+  requireRole(
+    'super_admin',
+    'direction',
+    'formateur'
+  ),
+  getArchivedFuelDeliveries
 )
 
 router.post(
@@ -45,6 +59,28 @@ router.patch(
     'formateur'
   ),
   updateFuelDelivery
+)
+
+router.patch(
+  '/:id/archive',
+  authMiddleware,
+  requireRole(
+    'super_admin',
+    'direction',
+    'formateur'
+  ),
+  archiveFuelDelivery
+)
+
+router.patch(
+  '/:id/restore',
+  authMiddleware,
+  requireRole(
+    'super_admin',
+    'direction',
+    'formateur'
+  ),
+  restoreFuelDelivery
 )
 
 export default router

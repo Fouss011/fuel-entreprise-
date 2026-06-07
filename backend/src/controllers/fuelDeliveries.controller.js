@@ -129,7 +129,8 @@ export async function deliverFuel(req, res) {
         total_amount: 0,
         station_name: stationName || null,
         delivery_notes: deliveryNotes || null,
-        structure_id: finalStructureId
+        structure_id: finalStructureId,
+        status: 'active'
       })
       .select('*')
       .single()
@@ -203,5 +204,106 @@ export async function updateFuelDelivery(req, res) {
   } catch (error) {
     console.error('UPDATE_FUEL_DELIVERY_ERROR =>', error)
     return res.status(500).json({ error: 'Erreur modification livraison' })
+  }
+}
+
+export async function archiveFuelDelivery(req, res) {
+  try {
+    const { id } = req.params
+    const { reason } = req.body
+
+    if (!reason || !reason.trim()) {
+      return res.status(400).json({
+        error: 'Motif d’archivage obligatoire'
+      })
+    }
+
+    let query = supabase
+      .from('fuel_deliveries')
+      .update({
+        status: 'archived',
+        archived_at: new Date().toISOString(),
+        archived_by: req.user.id,
+        archive_reason: reason.trim()
+      })
+      .eq('id', id)
+      .select('*')
+      .single()
+
+    query = applyStructureScope(query, req)
+
+    const { data, error } = await query
+
+    if (error) return res.status(400).json({ error: error.message })
+
+    return res.json({ delivery: data })
+  } catch (error) {
+    console.error('ARCHIVE_FUEL_DELIVERY_ERROR =>', error)
+    return res.status(500).json({ error: 'Erreur archivage livraison' })
+  }
+}
+
+export async function restoreFuelDelivery(req, res) {
+  try {
+    const { id } = req.params
+
+    let query = supabase
+      .from('fuel_deliveries')
+      .update({
+        status: 'active',
+        archived_at: null,
+        archived_by: null,
+        archive_reason: null
+      })
+      .eq('id', id)
+      .select('*')
+      .single()
+
+    query = applyStructureScope(query, req)
+
+    const { data, error } = await query
+
+    if (error) return res.status(400).json({ error: error.message })
+
+    return res.json({ delivery: data })
+  } catch (error) {
+    console.error('RESTORE_FUEL_DELIVERY_ERROR =>', error)
+    return res.status(500).json({ error: 'Erreur restauration livraison' })
+  }
+}
+
+export async function getArchivedFuelDeliveries(req, res) {
+  try {
+    let query = supabase
+      .from('fuel_deliveries')
+      .select(`
+        *,
+        voucher:fuel_vouchers(
+          id,
+          voucher_number,
+          approved_liters,
+          requested_liters,
+          status,
+          driver:users_profile!fuel_vouchers_driver_id_fkey(id, full_name),
+          vehicle:vehicles(id, plate_number, label),
+          division:divisions(id, name, code)
+        ),
+        pompiste:users_profile!fuel_deliveries_pump_attendant_id_fkey(id, full_name),
+        archivedBy:users_profile!fuel_deliveries_archived_by_fkey(id, full_name),
+        structure:structures(id, name, code)
+      `)
+      .eq('status', 'archived')
+      .order('archived_at', { ascending: false })
+
+    query = applyStructureScope(query, req)
+
+    const { data, error } = await query
+
+    if (error) return res.status(400).json({ error: error.message })
+
+    return res.json({ deliveries: data || [] })
+  } catch (error) {
+    console.error('GET_ARCHIVED_FUEL_DELIVERIES_ERROR =>', error)
+    return res.status(500).json({ error: 'Erreur chargement archives' })
   }
 }

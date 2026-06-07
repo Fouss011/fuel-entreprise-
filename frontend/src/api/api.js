@@ -169,6 +169,42 @@ export async function updateFuelDelivery(id, payload) {
   return response.json()
 }
 
+export async function archiveFuelDelivery(id, payload) {
+  const response = await fetch(
+    `${API_URL}/fuel-deliveries/${id}/archive`,
+    {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify(payload)
+    }
+  )
+
+  return response.json()
+}
+
+export async function restoreFuelDelivery(id) {
+  const response = await fetch(
+    `${API_URL}/fuel-deliveries/${id}/restore`,
+    {
+      method: 'PATCH',
+      headers: authHeaders()
+    }
+  )
+
+  return response.json()
+}
+
+export async function getArchivedFuelDeliveries() {
+  const response = await fetch(
+    `${API_URL}/fuel-deliveries/archives`,
+    {
+      headers: authHeaders()
+    }
+  )
+
+  return response.json()
+}
+
 export async function getDeliveriesReport() {
   const response = await fetch(
     `${API_URL}/reports/deliveries`,

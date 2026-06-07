@@ -9,6 +9,7 @@ import EntityCard from '../components/EntityCard'
 import SearchSelect from '../components/SearchSelect'
 
 import {
+  archiveFuelDelivery,
   getVehicleHistory,
   getVehicles,
   updateFuelDelivery
@@ -107,6 +108,27 @@ export default function VehicleHistoryPage() {
     await loadHistory(vehicleId, month)
     setSaving(false)
   }
+
+  async function handleArchiveDelivery(item) {
+  const reason = window.prompt(
+    `Motif d'archivage du bon ${item.voucher?.voucher_number || ''} :`
+  )
+
+  if (!reason || !reason.trim()) return
+
+  const data = await archiveFuelDelivery(item.id, { reason })
+
+  if (data.error) {
+    setError(data.error)
+    return
+  }
+
+  if (editingDelivery?.id === item.id) {
+    cancelEdit()
+  }
+
+  await loadHistory(vehicleId, month)
+}
 
   const filteredDeliveries = useMemo(() => {
     return [...deliveries].sort((a, b) => {
@@ -419,72 +441,81 @@ export default function VehicleHistoryPage() {
           </p>
 
           <div style={{ display: 'grid', gap: 14 }}>
-            {enrichedDeliveries.map((item) => (
-              <EntityCard
-                key={item.id}
-                title={item.voucher?.voucher_number || 'Bon carburant'}
-                subtitle={
-                  item.delivered_at
-                    ? new Date(item.delivered_at).toLocaleString('fr-FR')
-                    : 'Date inconnue'
-                }
-                badge="MODIFIER"
-                badgeTone="blue"
-                onAction={() => startEdit(item)}
-                items={[
-                  {
-                    label: 'Véhicule',
-                    value: item.voucher?.vehicle?.plate_number || '-'
-                  },
-                  {
-                    label: 'Division',
-                    value: item.voucher?.division?.code
-                      ? `${item.voucher.division.code} — ${item.voucher.division.name}`
-                      : item.voucher?.division?.name || '-'
-                  },
-                  {
-                    label: 'Demandé',
-                    value: `${item.voucher?.requested_liters || 0} L`
-                  },
-                  {
-                    label: 'Approuvé',
-                    value: `${item.voucher?.approved_liters || 0} L`
-                  },
-                  {
-                    label: 'Servi',
-                    value: `${item.delivered_liters || 0} L`
-                  },
-                  {
-                    label: 'Kilométrage',
-                    value: item.odometer_km ? `${item.odometer_km} km` : '-'
-                  },
-                  {
-                    label: 'Distance estimée',
-                    value: item.distanceKm ? `${item.distanceKm} km` : '-'
-                  },
-                  {
-                    label: 'Pompiste',
-                    value: item.pompiste?.full_name || '-'
-                  }
-                ]}
-              />
-            ))}
+  {enrichedDeliveries.map((item) => (
+    <div key={item.id} style={{ display: 'grid', gap: 8 }}>
+      <EntityCard
+        title={item.voucher?.voucher_number || 'Bon carburant'}
+        subtitle={
+          item.delivered_at
+            ? new Date(item.delivered_at).toLocaleString('fr-FR')
+            : 'Date inconnue'
+        }
+        badge="MODIFIER"
+        badgeTone="blue"
+        onAction={() => startEdit(item)}
+        items={[
+          {
+            label: 'Véhicule',
+            value: item.voucher?.vehicle?.plate_number || '-'
+          },
+          {
+            label: 'Division',
+            value: item.voucher?.division?.code
+              ? `${item.voucher.division.code} — ${item.voucher.division.name}`
+              : item.voucher?.division?.name || '-'
+          },
+          {
+            label: 'Demandé',
+            value: `${item.voucher?.requested_liters || 0} L`
+          },
+          {
+            label: 'Approuvé',
+            value: `${item.voucher?.approved_liters || 0} L`
+          },
+          {
+            label: 'Servi',
+            value: `${item.delivered_liters || 0} L`
+          },
+          {
+            label: 'Kilométrage',
+            value: item.odometer_km ? `${item.odometer_km} km` : '-'
+          },
+          {
+            label: 'Distance estimée',
+            value: item.distanceKm ? `${item.distanceKm} km` : '-'
+          },
+          {
+            label: 'Pompiste',
+            value: item.pompiste?.full_name || '-'
+          }
+        ]}
+      />
 
-            {enrichedDeliveries.length === 0 && (
-              <EntityCard
-                title="Aucune livraison"
-                subtitle="Historique véhicule"
-                badge="VIDE"
-                badgeTone="blue"
-                items={[
-                  {
-                    label: 'Période',
-                    value: month || 'Toutes périodes'
-                  }
-                ]}
-              />
-            )}
-          </div>
+      <button
+        type="button"
+        className="btn-secondary"
+        onClick={() => handleArchiveDelivery(item)}
+      >
+        Archiver cette livraison
+      </button>
+    </div>
+  ))}
+
+  {enrichedDeliveries.length === 0 && (
+    <EntityCard
+      title="Aucune livraison"
+      subtitle="Historique véhicule"
+      badge="VIDE"
+      badgeTone="blue"
+      items={[
+        {
+          label: 'Période',
+          value: month || 'Toutes périodes'
+        }
+      ]}
+    />
+  )}
+</div>
         </div>
       </div>
     </MainLayout>

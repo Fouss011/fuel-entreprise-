@@ -12,6 +12,7 @@ import AnalyticsPage from './pages/AnalyticsPage'
 import MonthlyClosingPage from './pages/MonthlyClosingPage'
 import VehicleHistoryPage from './pages/VehicleHistoryPage'
 import StructuresPage from './pages/StructuresPage'
+import ArchivesFuelPage from './pages/ArchivesFuelPage'
 
 import RoleProtectedRoute from './components/RoleProtectedRoute'
 
@@ -175,6 +176,21 @@ export default function App() {
       ]}
     >
       <StructuresPage />
+    </RoleProtectedRoute>
+  }
+/>
+
+<Route
+  path="/archives-carburant"
+  element={
+    <RoleProtectedRoute
+      allowedRoles={[
+        'super_admin',
+        'direction',
+        'formateur'
+      ]}
+    >
+      <ArchivesFuelPage />
     </RoleProtectedRoute>
   }
 />

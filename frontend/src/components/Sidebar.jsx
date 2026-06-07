@@ -202,6 +202,15 @@ export default function Sidebar() {
     />
   )}
 
+  {hasRole('super_admin', 'direction', 'formateur') && (
+  <SidebarItem
+    close={() => setOpen(false)}
+    to="/archives-carburant"
+    icon={<ShieldCheck size={18} />}
+    label="Archives carburant"
+  />
+)}
+
   {hasRole('super_admin', 'direction') && (
     <SidebarItem
       close={() => setOpen(false)}
