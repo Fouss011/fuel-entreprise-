@@ -14,12 +14,20 @@ import {
   X
 } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { hasRole } from '../utils/roles'
 
 export default function Sidebar() {
   const user = JSON.parse(localStorage.getItem('fuel_user') || '{}')
   const [open, setOpen] = useState(false)
+  useEffect(() => {
+  const saved = sessionStorage.getItem('sidebarScrollTop')
+  const sidebar = document.querySelector('.sidebar')
+
+  if (saved && sidebar) {
+    sidebar.scrollTop = Number(saved)
+  }
+})
 
   function logout() {
     localStorage.removeItem('fuel_token')
@@ -246,8 +254,14 @@ function SidebarItem({ icon, label, to, close }) {
 
   return (
     <Link
-      to={to}
-      onClick={close}
+  to={to}
+  onClick={(e) => {
+    const sidebar = e.currentTarget.closest('.sidebar')
+    if (sidebar) {
+      sessionStorage.setItem('sidebarScrollTop', String(sidebar.scrollTop))
+    }
+    close()
+  }}
       style={{
         minHeight: 42,
         display: 'flex',
