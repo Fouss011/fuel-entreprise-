@@ -88,14 +88,18 @@ export async function createUser(req, res) {
       })
     }
 
-    const passwordHash = needsLogin
-      ? await bcrypt.hash(password, 10)
-      : null
+    const cleanEmail = needsLogin
+  ? email.toLowerCase().trim()
+  : `no-login-${Date.now()}-${Math.random().toString(36).slice(2)}@fuel.local`
 
-    const { data, error } = await supabase
-      .from('users_profile')
-      .insert({
-        email: needsLogin ? email.toLowerCase().trim() : null,
+const passwordHash = needsLogin
+  ? await bcrypt.hash(password, 10)
+  : null
+
+const { data, error } = await supabase
+  .from('users_profile')
+  .insert({
+    email: cleanEmail,
         password_hash: passwordHash,
         full_name: fullName,
         phone: phone || null,

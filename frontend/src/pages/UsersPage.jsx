@@ -277,7 +277,11 @@ export default function UsersPage() {
                 <EntityCard
                   key={user.id}
                   title={user.full_name}
-                  subtitle={user.email || 'Aucun accès de connexion'}
+                  subtitle={
+  user.email?.includes('@fuel.local')
+    ? 'Aucun accès de connexion'
+    : user.email || 'Aucun accès de connexion'
+}
                   badge="SUPPRIMER"
                   badgeTone="danger"
                   onAction={() => handleDelete(user.id)}
