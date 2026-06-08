@@ -94,7 +94,7 @@ export async function createUser(req, res) {
 
 const passwordHash = needsLogin
   ? await bcrypt.hash(password, 10)
-  : null
+  : await bcrypt.hash(`no-login-${Date.now()}-${Math.random()}`, 10)
 
 const { data, error } = await supabase
   .from('users_profile')
