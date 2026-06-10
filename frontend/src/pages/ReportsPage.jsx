@@ -171,7 +171,8 @@ export default function ReportsPage() {
         'Bon',
         'Plaque',
         'Division',
-        'Litres',
+        'Validé',
+        'Servi',
         'Kilométrage',
         'Station',
         'Pompiste',
@@ -183,6 +184,7 @@ export default function ReportsPage() {
         item.voucher?.division?.code
           ? `${item.voucher.division.code} - ${item.voucher.division.name}`
           : item.voucher?.division?.name || '-',
+        `${item.voucher?.approved_liters || 0} L`,
         `${item.delivered_liters || 0} L`,
         item.odometer_km ? `${item.odometer_km} km` : '-',
         item.station_name || '-',
@@ -357,9 +359,13 @@ export default function ReportsPage() {
                       : item.voucher?.division?.name || '-'
                   },
                   {
-                    label: 'Litres',
-                    value: `${item.delivered_liters || 0} L`
-                  },
+  label: 'Validé',
+  value: `${item.voucher?.approved_liters || 0} L`
+},
+{
+  label: 'Servi',
+  value: `${item.delivered_liters || 0} L`
+},
                   {
                     label: 'Kilométrage',
                     value: item.odometer_km ? `${item.odometer_km} km` : '-'

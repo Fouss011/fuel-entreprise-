@@ -363,12 +363,18 @@ export default function PumpPage() {
               </div>
 
               <input
-                value={deliveredLiters}
-                onChange={(e) => setDeliveredLiters(e.target.value)}
-                placeholder="Quantité réellement servie"
-                className="form-input"
-                type="number"
-              />
+  value={deliveredLiters}
+  onChange={(e) => setDeliveredLiters(e.target.value)}
+  placeholder="Quantité réellement servie"
+  className="form-input"
+  type="number"
+  min="0"
+  max={selectedVoucher.approved_liters || ''}
+/>
+
+<p style={{ color: '#64748b', fontSize: 13, marginTop: -8 }}>
+  La quantité servie ne peut pas dépasser {selectedVoucher.approved_liters || 0} L.
+</p>
 
               <input
                 value={odometerKm}
