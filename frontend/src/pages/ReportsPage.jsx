@@ -170,6 +170,7 @@ export default function ReportsPage() {
       head: [[
         'Bon',
         'Plaque',
+        'Bénéficiaire',
         'Division',
         'Validé',
         'Servi',
@@ -181,6 +182,7 @@ export default function ReportsPage() {
       body: filteredDeliveries.map((item) => [
         item.voucher?.voucher_number || '-',
         item.voucher?.vehicle?.plate_number || '-',
+        item.voucher?.driver?.full_name || '-',
         item.voucher?.division?.code
           ? `${item.voucher.division.code} - ${item.voucher.division.name}`
           : item.voucher?.division?.name || '-',
@@ -352,6 +354,10 @@ export default function ReportsPage() {
                     label: 'Véhicule',
                     value: `${item.voucher?.vehicle?.plate_number || '-'} — ${item.voucher?.vehicle?.label || 'Sans libellé'}`
                   },
+                  {
+  label: 'Bénéficiaire',
+  value: item.voucher?.driver?.full_name || '-'
+},
                   {
                     label: 'Division',
                     value: item.voucher?.division?.code

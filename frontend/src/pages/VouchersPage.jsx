@@ -243,6 +243,10 @@ export default function VouchersPage() {
                       value: voucher.vehicle?.plate_number || '-'
                     },
                     {
+  label: 'Bénéficiaire',
+  value: voucher.driver?.full_name || '-'
+},
+                    {
                       label: 'Division',
                       value: voucher.division?.code
                         ? `${voucher.division.code} — ${voucher.division.name}`
@@ -348,14 +352,18 @@ export default function VouchersPage() {
             />
 
             <SearchSelect
-              label="Chauffeur / bénéficiaire"
-              placeholder="Rechercher un chauffeur..."
-              items={users}
-              value={driverId}
-              onChange={setDriverId}
-              getLabel={(item) => item.full_name}
-              getSubLabel={(item) => item.email || item.role || '-'}
-            />
+  label="Chauffeur / bénéficiaire"
+  placeholder="Rechercher un chauffeur..."
+  items={users}
+  value={driverId}
+  onChange={setDriverId}
+  getLabel={(item) => item.full_name}
+  getSubLabel={(item) =>
+    item.division?.code
+      ? `${item.division.code} — ${item.division.name}`
+      : item.division?.name || roleLabels?.[item.role] || item.role || '-'
+  }
+/>
 
             <select
               value={fuelType}
