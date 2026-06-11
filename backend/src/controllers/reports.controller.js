@@ -13,7 +13,7 @@ export async function getDeliveriesReport(req, res) {
           requested_liters,
           approved_liters,
           division:divisions(id, name, code),
-          vehicle:vehicles(id, plate_number, label)
+          vehicle:vehicles(id, plate_number, label),
           driver:users_profile!fuel_vouchers_driver_id_fkey(id, full_name)
         ),
         pompiste:users_profile!fuel_deliveries_pump_attendant_id_fkey(
