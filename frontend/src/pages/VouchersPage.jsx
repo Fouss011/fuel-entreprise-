@@ -361,7 +361,7 @@ export default function VouchersPage() {
   getSubLabel={(item) =>
     item.division?.code
       ? `${item.division.code} — ${item.division.name}`
-      : item.division?.name || roleLabels?.[item.role] || item.role || '-'
+      : item.division?.name || item.role || '-'
   }
 />
 
