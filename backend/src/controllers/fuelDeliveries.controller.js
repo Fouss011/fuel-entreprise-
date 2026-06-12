@@ -73,11 +73,33 @@ export async function deliverFuel(req, res) {
       deliveryNotes
     } = req.body
 
-    if (!voucherId || !deliveredLiters || !odometerKm) {
-      return res.status(400).json({
-        error: 'Bon, quantité livrée et kilométrage requis'
-      })
-    }
+    if (!voucherId) {
+  return res.status(400).json({
+    error: 'Bon carburant manquant'
+  })
+}
+
+if (
+  deliveredLiters === undefined ||
+  deliveredLiters === null ||
+  deliveredLiters === ''
+) {
+  return res.status(400).json({
+    error: 'La quantité réellement servie est obligatoire'
+  })
+}
+
+if (Number(deliveredLiters) <= 0) {
+  return res.status(400).json({
+    error: 'La quantité servie doit être supérieure à 0'
+  })
+}
+
+if (!odometerKm) {
+  return res.status(400).json({
+    error: 'Le kilométrage est obligatoire'
+  })
+}
 
     const structureId = getUserStructureId(req)
 
@@ -174,11 +196,27 @@ export async function updateFuelDelivery(req, res) {
       deliveryNotes
     } = req.body
 
-    if (!deliveredLiters || !odometerKm) {
-      return res.status(400).json({
-        error: 'Quantité livrée et kilométrage requis'
-      })
-    }
+    if (
+  deliveredLiters === undefined ||
+  deliveredLiters === null ||
+  deliveredLiters === ''
+) {
+  return res.status(400).json({
+    error: 'La quantité réellement servie est obligatoire'
+  })
+}
+
+if (Number(deliveredLiters) <= 0) {
+  return res.status(400).json({
+    error: 'La quantité servie doit être supérieure à 0'
+  })
+}
+
+if (!odometerKm) {
+  return res.status(400).json({
+    error: 'Le kilométrage est obligatoire'
+  })
+}
 
     let query = supabase
       .from('fuel_deliveries')

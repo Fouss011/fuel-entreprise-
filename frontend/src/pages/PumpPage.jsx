@@ -48,7 +48,7 @@ export default function PumpPage() {
       const voucher = data.vouchers[0]
 
       setSelectedVoucher(voucher)
-      setDeliveredLiters(voucher.approved_liters || '')
+      setDeliveredLiters('')
       setOdometerKm('')
       return
     }
@@ -61,6 +61,15 @@ export default function PumpPage() {
     e.preventDefault()
 
     if (!selectedVoucher) return
+    if (!deliveredLiters || Number(deliveredLiters) <= 0) {
+  setError('La quantité réellement servie est obligatoire.')
+  return
+}
+
+if (Number(deliveredLiters) > Number(selectedVoucher.approved_liters || 0)) {
+  setError('La quantité servie ne peut pas dépasser la quantité approuvée.')
+  return
+}
 
     setLoading(true)
     setError('')
@@ -162,7 +171,7 @@ export default function PumpPage() {
                   type="button"
                   onClick={() => {
                     setSelectedVoucher(voucher)
-                    setDeliveredLiters(voucher.approved_liters || '')
+                    setDeliveredLiters('')
                     setOdometerKm('')
                     setError('')
                   }}
@@ -370,6 +379,7 @@ export default function PumpPage() {
   type="number"
   min="0"
   max={selectedVoucher.approved_liters || ''}
+  required
 />
 
 <p style={{ color: '#64748b', fontSize: 13, marginTop: -8 }}>
