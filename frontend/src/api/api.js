@@ -320,3 +320,108 @@ export async function createStructure(payload) {
 
   return response.json()
 }
+
+export async function getArchivedDivisions() {
+  const response = await fetch(
+    `${API_URL}/divisions/archives`,
+    {
+      headers: authHeaders()
+    }
+  )
+
+  return response.json()
+}
+
+export async function restoreDivision(id) {
+  const response = await fetch(
+    `${API_URL}/divisions/${id}/restore`,
+    {
+      method: 'PATCH',
+      headers: authHeaders()
+    }
+  )
+
+  return response.json()
+}
+
+export async function deleteArchivedDivisionPermanently(id) {
+  const response = await fetch(
+    `${API_URL}/divisions/${id}/permanent`,
+    {
+      method: 'DELETE',
+      headers: authHeaders()
+    }
+  )
+
+  return response.json()
+}
+
+export async function getArchivedVehicles() {
+  const response = await fetch(
+    `${API_URL}/vehicles/archives`,
+    {
+      headers: authHeaders()
+    }
+  )
+
+  return response.json()
+}
+
+export async function restoreVehicle(id) {
+  const response = await fetch(
+    `${API_URL}/vehicles/${id}/restore`,
+    {
+      method: 'PATCH',
+      headers: authHeaders()
+    }
+  )
+
+  return response.json()
+}
+
+export async function deleteArchivedVehiclePermanently(id) {
+  const response = await fetch(
+    `${API_URL}/vehicles/${id}/permanent`,
+    {
+      method: 'DELETE',
+      headers: authHeaders()
+    }
+  )
+
+  return response.json()
+}
+
+export async function getArchivedUsers() {
+  const response = await fetch(
+    `${API_URL}/users/archives`,
+    {
+      headers: authHeaders()
+    }
+  )
+
+  return response.json()
+}
+
+export async function restoreUser(id) {
+  const response = await fetch(
+    `${API_URL}/users/${id}/restore`,
+    {
+      method: 'PATCH',
+      headers: authHeaders()
+    }
+  )
+
+  return response.json()
+}
+
+export async function deleteArchivedUserPermanently(id) {
+  const response = await fetch(
+    `${API_URL}/users/${id}/permanent`,
+    {
+      method: 'DELETE',
+      headers: authHeaders()
+    }
+  )
+
+  return response.json()
+}

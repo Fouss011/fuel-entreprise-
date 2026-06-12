@@ -149,3 +149,95 @@ export async function deleteVehicle(req, res) {
     return res.status(500).json({ error: 'Erreur archivage véhicule' })
   }
 }
+
+export async function getArchivedVehicles(req, res) {
+  try {
+    let query = supabase
+      .from('vehicles')
+      .select(`
+        *,
+        division:divisions(id, name, code),
+        structure:structures(id, name, code)
+      `)
+      .eq('is_active', false)
+      .order('created_at', { ascending: false })
+
+    query = applyStructureScope(query, req)
+
+    const { data, error } = await query
+
+    if (error) return res.status(400).json({ error: error.message })
+
+    return res.json({ vehicles: data || [] })
+  } catch (error) {
+    console.error('GET_ARCHIVED_VEHICLES_ERROR =>', error)
+    return res.status(500).json({ error: 'Erreur chargement véhicules archivés' })
+  }
+}
+
+export async function restoreVehicle(req, res) {
+  try {
+    const { id } = req.params
+
+    let query = supabase
+      .from('vehicles')
+      .update({ is_active: true })
+      .eq('id', id)
+      .select('*')
+      .single()
+
+    query = applyStructureScope(query, req)
+
+    const { data, error } = await query
+
+    if (error) return res.status(400).json({ error: error.message })
+
+    return res.json({
+      vehicle: data,
+      message: 'Véhicule restauré'
+    })
+  } catch (error) {
+    console.error('RESTORE_VEHICLE_ERROR =>', error)
+    return res.status(500).json({ error: 'Erreur restauration véhicule' })
+  }
+}
+
+export async function deleteArchivedVehiclePermanently(req, res) {
+  try {
+    const { id } = req.params
+
+    let checkQuery = supabase
+      .from('fuel_vouchers')
+      .select('id', { count: 'exact', head: true })
+      .eq('vehicle_id', id)
+
+    checkQuery = applyStructureScope(checkQuery, req)
+
+    const { count, error: checkError } = await checkQuery
+
+    if (checkError) return res.status(400).json({ error: checkError.message })
+
+    if (count > 0) {
+      return res.status(400).json({
+        error: 'Impossible de supprimer définitivement : ce véhicule est lié à un ou plusieurs bons.'
+      })
+    }
+
+    let deleteQuery = supabase
+      .from('vehicles')
+      .delete()
+      .eq('id', id)
+      .eq('is_active', false)
+
+    deleteQuery = applyStructureScope(deleteQuery, req)
+
+    const { error } = await deleteQuery
+
+    if (error) return res.status(400).json({ error: error.message })
+
+    return res.json({ message: 'Véhicule supprimé définitivement' })
+  } catch (error) {
+    console.error('DELETE_ARCHIVED_VEHICLE_ERROR =>', error)
+    return res.status(500).json({ error: 'Erreur suppression définitive véhicule' })
+  }
+}

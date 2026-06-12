@@ -113,7 +113,9 @@ export default function VehiclesPage() {
   }
 
   async function handleDelete(id) {
-    if (!window.confirm('Supprimer ce véhicule ?')) return
+    if (!window.confirm(
+  "Archiver ce véhicule ? Il ne sera plus disponible pour les nouveaux bons, mais les anciens rapports resteront visibles."
+)) return
 
     const data = await deleteVehicle(id)
 
@@ -221,8 +223,8 @@ export default function VehiclesPage() {
                   key={vehicle.id}
                   title={vehicle.plate_number}
                   subtitle={vehicle.label || 'Véhicule'}
-                  badge="SUPPRIMER"
-                  badgeTone="danger"
+                  badge="ARCHIVER"
+                  badgeTone="amber"
                   onAction={() => handleDelete(vehicle.id)}
                   items={[
                     {

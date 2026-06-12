@@ -4,7 +4,10 @@ import {
   getVehicles,
   createVehicle,
   updateVehicle,
-  deleteVehicle
+  deleteVehicle,
+  getArchivedVehicles,
+restoreVehicle,
+deleteArchivedVehiclePermanently
 } from '../controllers/vehicles.controller.js'
 
 import { authMiddleware } from '../middleware/authMiddleware.js'
@@ -28,6 +31,26 @@ router.patch(
   updateVehicle
 )
 
+router.get(
+  '/archives',
+  authMiddleware,
+  requireRole('super_admin', 'direction', 'formateur'),
+  getArchivedVehicles
+)
+
+router.patch(
+  '/:id/restore',
+  authMiddleware,
+  requireRole('super_admin', 'direction', 'formateur'),
+  restoreVehicle
+)
+
+router.delete(
+  '/:id/permanent',
+  authMiddleware,
+  requireRole('super_admin', 'direction', 'formateur'),
+  deleteArchivedVehiclePermanently
+)
 router.delete(
   '/:id',
   authMiddleware,

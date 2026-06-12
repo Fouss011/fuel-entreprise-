@@ -171,7 +171,9 @@ export default function UsersPage() {
   }
 
   async function handleDelete(id) {
-    if (!window.confirm('Supprimer cet utilisateur ?')) return
+    if (!window.confirm(
+  "Archiver cet utilisateur ? Il ne pourra plus être utilisé pour les nouvelles opérations, mais son historique restera visible."
+)) return
 
     const data = await deleteUser(id)
 
@@ -282,8 +284,8 @@ export default function UsersPage() {
     ? 'Aucun accès de connexion'
     : user.email || 'Aucun accès de connexion'
 }
-                  badge="SUPPRIMER"
-                  badgeTone="danger"
+                  badge="ARCHIVER"
+                  badgeTone="amber"
                   onAction={() => handleDelete(user.id)}
                   items={[
                     {

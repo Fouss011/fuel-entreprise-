@@ -47,7 +47,9 @@ export default function DivisionsPage() {
   }
 
   async function handleDelete(id) {
-    if (!window.confirm('Supprimer cette division ?')) return
+    if (!window.confirm(
+  "Archiver cette division ? Elle ne sera plus disponible pour les nouveaux bons, mais les anciens rapports resteront visibles."
+)) return
 
     const data = await deleteDivision(id)
 
@@ -110,8 +112,8 @@ export default function DivisionsPage() {
     key={division.id}
     title={division.code}
     subtitle={division.name}
-    badge="SUPPRIMER"
-    badgeTone="danger"
+    badge="ARCHIVER"
+    badgeTone="amber"
     onAction={() => handleDelete(division.id)}
     items={[
       {
