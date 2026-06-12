@@ -31,6 +31,7 @@ export async function getUsers(req, res) {
         division:divisions(id, name, code),
         structure:structures(id, name, code)
       `)
+      .eq('is_active', true)
       .order('created_at', { ascending: false })
 
     query = applyStructureScope(query, req)
