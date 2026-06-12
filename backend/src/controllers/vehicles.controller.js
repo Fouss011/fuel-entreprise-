@@ -13,6 +13,7 @@ export async function getVehicles(req, res) {
         division:divisions(id, name, code),
         structure:structures(id, name, code)
       `)
+      .eq('is_active', true)
       .order('created_at', { ascending: false })
 
     query = applyStructureScope(query, req)
@@ -126,18 +127,25 @@ export async function deleteVehicle(req, res) {
 
     let query = supabase
       .from('vehicles')
-      .delete()
+      .update({
+        is_active: false
+      })
       .eq('id', id)
+      .select('*')
+      .single()
 
     query = applyStructureScope(query, req)
 
-    const { error } = await query
+    const { data, error } = await query
 
     if (error) return res.status(400).json({ error: error.message })
 
-    return res.json({ message: 'Véhicule supprimé' })
+    return res.json({
+      vehicle: data,
+      message: 'Véhicule archivé. Les anciens bons restent visibles dans les rapports.'
+    })
   } catch (error) {
-    console.error('DELETE_VEHICLE_ERROR =>', error)
-    return res.status(500).json({ error: 'Erreur suppression véhicule' })
+    console.error('ARCHIVE_VEHICLE_ERROR =>', error)
+    return res.status(500).json({ error: 'Erreur archivage véhicule' })
   }
 }

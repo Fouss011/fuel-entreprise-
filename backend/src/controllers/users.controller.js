@@ -142,18 +142,25 @@ export async function deleteUser(req, res) {
 
     let query = supabase
       .from('users_profile')
-      .delete()
+      .update({
+        is_active: false
+      })
       .eq('id', id)
+      .select('*')
+      .single()
 
     query = applyStructureScope(query, req)
 
-    const { error } = await query
+    const { data, error } = await query
 
     if (error) return res.status(400).json({ error: error.message })
 
-    return res.json({ message: 'Utilisateur supprimé' })
+    return res.json({
+      user: data,
+      message: 'Utilisateur archivé. Les anciens bons restent visibles dans les rapports.'
+    })
   } catch (error) {
-    console.error('DELETE_USER_ERROR =>', error)
-    return res.status(500).json({ error: 'Erreur suppression utilisateur' })
+    console.error('ARCHIVE_USER_ERROR =>', error)
+    return res.status(500).json({ error: 'Erreur archivage utilisateur' })
   }
 }
