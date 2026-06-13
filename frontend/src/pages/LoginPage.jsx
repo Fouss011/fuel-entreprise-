@@ -8,7 +8,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  
 
   async function handleLogin(e) {
     e.preventDefault()
@@ -25,15 +24,23 @@ export default function LoginPage() {
       }
 
       localStorage.setItem('fuel_token', data.token)
-localStorage.setItem('fuel_user', JSON.stringify(data.user))
+      localStorage.setItem('fuel_user', JSON.stringify(data.user))
 
-const role = data.user?.role
+      const role = data.user?.role
 
-if (role === 'pompiste') {
-  window.location.replace('/pump')
-} else {
-  window.location.replace('/')
-}
+      if (role === 'super_admin') {
+        localStorage.removeItem('active_structure_id')
+        localStorage.removeItem('active_structure_name')
+        window.location.replace('/structures')
+        return
+      }
+
+      if (role === 'pompiste') {
+        window.location.replace('/pump')
+        return
+      }
+
+      window.location.replace('/')
     } catch {
       setError('Erreur connexion')
     } finally {
@@ -182,45 +189,43 @@ if (role === 'pompiste') {
 
           <label style={labelStyle}>Mot de passe</label>
           <div
-  style={{
-    position: 'relative',
-    marginBottom: 18
-  }}
->
-  <input
-    type={showPassword ? 'text' : 'password'}
-    value={password}
-    onChange={(e) => setPassword(e.target.value)}
-    placeholder="Entrez votre mot de passe"
-    className="form-input"
-    style={{
-      paddingRight: 52
-    }}
-  />
+            style={{
+              position: 'relative',
+              marginBottom: 18
+            }}
+          >
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Entrez votre mot de passe"
+              className="form-input"
+              style={{
+                paddingRight: 52
+              }}
+            />
 
-  <button
-    type="button"
-    onClick={() =>
-      setShowPassword(!showPassword)
-    }
-    style={{
-      position: 'absolute',
-      right: 14,
-      top: '50%',
-      transform: 'translateY(-50%)',
-      border: 'none',
-      background: 'transparent',
-      cursor: 'pointer',
-      color: '#64748b'
-    }}
-  >
-    {showPassword ? (
-      <EyeOff size={18} />
-    ) : (
-      <Eye size={18} />
-    )}
-  </button>
-</div>
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: 'absolute',
+                right: 14,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                border: 'none',
+                background: 'transparent',
+                cursor: 'pointer',
+                color: '#64748b'
+              }}
+            >
+              {showPassword ? (
+                <EyeOff size={18} />
+              ) : (
+                <Eye size={18} />
+              )}
+            </button>
+          </div>
 
           {error && (
             <p

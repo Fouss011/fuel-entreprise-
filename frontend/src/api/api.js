@@ -2,10 +2,12 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
 
 function authHeaders() {
   const token = localStorage.getItem('fuel_token')
+  const activeStructureId = localStorage.getItem('active_structure_id')
 
   return {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`
+    Authorization: `Bearer ${token}`,
+    'x-active-structure-id': activeStructureId || ''
   }
 }
 

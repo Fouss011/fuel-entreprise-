@@ -4,6 +4,9 @@ import EntityCard from '../components/EntityCard'
 import { createStructure, getStructures } from '../api/api'
 
 export default function StructuresPage() {
+  const currentUser = JSON.parse(localStorage.getItem('fuel_user') || '{}')
+  const isSuperAdmin = currentUser.role === 'super_admin'
+
   const [structures, setStructures] = useState([])
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
@@ -22,8 +25,19 @@ export default function StructuresPage() {
   }
 
   useEffect(() => {
+    if (!isSuperAdmin) {
+      window.location.replace('/')
+      return
+    }
+
     loadStructures()
   }, [])
+
+  function enterStructure(structure) {
+    localStorage.setItem('active_structure_id', structure.id)
+    localStorage.setItem('active_structure_name', structure.name)
+    window.location.href = '/'
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -47,6 +61,10 @@ export default function StructuresPage() {
     setLoading(false)
   }
 
+  if (!isSuperAdmin) {
+    return null
+  }
+
   return (
     <MainLayout>
       <div className="page-header">
@@ -54,9 +72,24 @@ export default function StructuresPage() {
           <p className="page-eyebrow">Multi-structures</p>
           <h1 className="page-title">Structures clientes</h1>
           <p className="page-subtitle">
-            Crée et administre les sociétés qui utilisent Fuel Manager.
+            Choisis une structure pour entrer dans son espace ou crée une nouvelle société cliente.
           </p>
         </div>
+      </div>
+
+      <div
+        className="panel"
+        style={{
+          marginBottom: 20,
+          border: '1px solid #bfdbfe',
+          background: '#eff6ff'
+        }}
+      >
+        <h3 className="panel-title">Espace super admin</h3>
+        <p className="panel-subtitle">
+          Aucune structure n’est sélectionnée par défaut. Clique sur “Entrer dans cet espace”
+          pour travailler uniquement sur les données de la structure choisie.
+        </p>
       </div>
 
       <div className="panel-grid">
@@ -73,6 +106,7 @@ export default function StructuresPage() {
                 title={structure.name}
                 subtitle={`Code : ${structure.code}`}
                 badge={structure.is_active ? 'ACTIVE' : 'INACTIVE'}
+                badgeTone={structure.is_active ? 'green' : 'danger'}
                 items={[
                   {
                     label: 'Identifiant',
@@ -83,6 +117,22 @@ export default function StructuresPage() {
                     value: structure.created_at
                       ? new Date(structure.created_at).toLocaleDateString()
                       : '-'
+                  },
+                  {
+                    label: 'Action',
+                    value: (
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={() => enterStructure(structure)}
+                        style={{
+                          padding: '7px 10px',
+                          fontSize: 12
+                        }}
+                      >
+                        ENTRER DANS CET ESPACE
+                      </button>
+                    )
                   }
                 ]}
               />
