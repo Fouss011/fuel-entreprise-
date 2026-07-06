@@ -69,8 +69,8 @@ export async function createVehicle(payload) {
   return response.json()
 }
 
-export async function updateStructure(id, payload) {
-  const response = await fetch(`${API_URL}/structures/${id}`, {
+export async function updateVehicle(id, payload) {
+  const response = await fetch(`${API_URL}/vehicles/${id}`, {
     method: 'PATCH',
     headers: authHeaders(),
     body: JSON.stringify(payload)
@@ -316,6 +316,16 @@ export async function getStructures() {
 export async function createStructure(payload) {
   const response = await fetch(`${API_URL}/structures`, {
     method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(payload)
+  })
+
+  return response.json()
+}
+
+export async function updateStructure(id, payload) {
+  const response = await fetch(`${API_URL}/structures/${id}`, {
+    method: 'PATCH',
     headers: authHeaders(),
     body: JSON.stringify(payload)
   })
