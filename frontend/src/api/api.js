@@ -69,8 +69,8 @@ export async function createVehicle(payload) {
   return response.json()
 }
 
-export async function updateVehicle(id, payload) {
-  const response = await fetch(`${API_URL}/vehicles/${id}`, {
+export async function updateStructure(id, payload) {
+  const response = await fetch(`${API_URL}/structures/${id}`, {
     method: 'PATCH',
     headers: authHeaders(),
     body: JSON.stringify(payload)

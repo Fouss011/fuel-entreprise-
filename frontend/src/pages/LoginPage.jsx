@@ -3,6 +3,7 @@ import { Eye, EyeOff } from 'lucide-react'
 import { loginUser } from '../api/api'
 
 export default function LoginPage() {
+  const [structureCode, setStructureCode] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -16,7 +17,11 @@ export default function LoginPage() {
       setLoading(true)
       setError('')
 
-      const data = await loginUser({ email, password })
+      const data = await loginUser({
+        structureCode,
+        email,
+        password
+      })
 
       if (data.error) {
         setError(data.error)
@@ -33,6 +38,14 @@ export default function LoginPage() {
         localStorage.removeItem('active_structure_name')
         window.location.replace('/structures')
         return
+      }
+
+      if (data.user?.structureId) {
+        localStorage.setItem('active_structure_id', data.user.structureId)
+        localStorage.setItem(
+          'active_structure_name',
+          data.user.structure?.name || ''
+        )
       }
 
       if (role === 'pompiste') {
@@ -177,6 +190,20 @@ export default function LoginPage() {
               Connexion à la plateforme
             </p>
           </div>
+
+          <label style={labelStyle}>
+            Code structure
+            <span style={{ color: '#94a3b8', fontWeight: 600 }}>
+              {' '}— facultatif pour le super admin
+            </span>
+          </label>
+          <input
+            value={structureCode}
+            onChange={(e) => setStructureCode(e.target.value.toUpperCase())}
+            placeholder="Exemple : SNPT"
+            className="form-input"
+            style={{ marginBottom: 16 }}
+          />
 
           <label style={labelStyle}>Email</label>
           <input

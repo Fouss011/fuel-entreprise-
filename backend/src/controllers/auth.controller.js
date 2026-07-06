@@ -19,27 +19,69 @@ function signToken(user) {
 
 export async function login(req, res) {
   try {
-    const { email, password } = req.body
+    const { email, password, structureCode } = req.body
 
     if (!email || !password) {
       return res.status(400).json({ error: 'Email et mot de passe requis' })
     }
 
-    const { data: user, error } = await supabase
+    const cleanEmail = email.toLowerCase().trim()
+    const cleanStructureCode = structureCode
+      ? structureCode.toUpperCase().trim()
+      : ''
+
+    let query = supabase
       .from('users_profile')
       .select(`
         *,
-        structure:structures(id, name, code)
+        structure:structures(id, name, code, is_active)
       `)
-      .eq('email', email.toLowerCase().trim())
-      .single()
+      .eq('email', cleanEmail)
 
-    if (error || !user) {
+    if (cleanStructureCode) {
+      query = query.eq('structures.code', cleanStructureCode)
+    }
+
+    const { data: users, error } = await query
+
+    if (error || !users || users.length === 0) {
       return res.status(401).json({ error: 'Identifiants incorrects' })
+    }
+
+    const matchingUsers = cleanStructureCode
+      ? users.filter(
+          (item) =>
+            item.structure &&
+            item.structure.code &&
+            item.structure.code.toUpperCase() === cleanStructureCode
+        )
+      : users
+
+    const superAdminUser = matchingUsers.find(
+      (item) => item.role === 'super_admin'
+    )
+
+    const user = cleanStructureCode
+      ? matchingUsers[0]
+      : superAdminUser || (matchingUsers.length === 1 ? matchingUsers[0] : null)
+
+    if (!user) {
+      return res.status(401).json({
+        error: 'Code structure requis pour ce compte'
+      })
     }
 
     if (!user.is_active) {
       return res.status(403).json({ error: 'Compte désactivé' })
+    }
+
+    if (
+      user.role !== 'super_admin' &&
+      (!user.structure || user.structure.is_active === false)
+    ) {
+      return res.status(403).json({
+        error: 'Structure inactive ou introuvable'
+      })
     }
 
     const isValid = await bcrypt.compare(password, user.password_hash)
