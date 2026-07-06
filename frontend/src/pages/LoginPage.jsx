@@ -3,7 +3,6 @@ import { Eye, EyeOff } from 'lucide-react'
 import { loginUser } from '../api/api'
 
 export default function LoginPage() {
-  const [structureCode, setStructureCode] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -18,7 +17,6 @@ export default function LoginPage() {
       setError('')
 
       const data = await loginUser({
-        structureCode,
         email,
         password
       })
@@ -190,20 +188,6 @@ export default function LoginPage() {
               Connexion à la plateforme
             </p>
           </div>
-
-          <label style={labelStyle}>
-            Code structure
-            <span style={{ color: '#94a3b8', fontWeight: 600 }}>
-              {' '}— facultatif pour le super admin
-            </span>
-          </label>
-          <input
-            value={structureCode}
-            onChange={(e) => setStructureCode(e.target.value.toUpperCase())}
-            placeholder="Exemple : SNPT"
-            className="form-input"
-            style={{ marginBottom: 16 }}
-          />
 
           <label style={labelStyle}>Email</label>
           <input

@@ -90,17 +90,35 @@ export async function createUser(req, res) {
     }
 
     const cleanEmail = needsLogin
-  ? email.toLowerCase().trim()
-  : `no-login-${Date.now()}-${Math.random().toString(36).slice(2)}@fuel.local`
+      ? email.toLowerCase().trim()
+      : `no-login-${Date.now()}-${Math.random().toString(36).slice(2)}@fuel.local`
 
-const passwordHash = needsLogin
-  ? await bcrypt.hash(password, 10)
-  : await bcrypt.hash(`no-login-${Date.now()}-${Math.random()}`, 10)
+    if (needsLogin) {
+      const { data: existingUser, error: existingUserError } = await supabase
+        .from('users_profile')
+        .select('id, email, is_active')
+        .eq('email', cleanEmail)
+        .maybeSingle()
 
-const { data, error } = await supabase
-  .from('users_profile')
-  .insert({
-    email: cleanEmail,
+      if (existingUserError) {
+        return res.status(400).json({ error: existingUserError.message })
+      }
+
+      if (existingUser) {
+        return res.status(400).json({
+          error: 'Cet email est déjà utilisé par un autre utilisateur'
+        })
+      }
+    }
+
+    const passwordHash = needsLogin
+      ? await bcrypt.hash(password, 10)
+      : await bcrypt.hash(`no-login-${Date.now()}-${Math.random()}`, 10)
+
+    const { data, error } = await supabase
+      .from('users_profile')
+      .insert({
+        email: cleanEmail,
         password_hash: passwordHash,
         full_name: fullName,
         phone: phone || null,
